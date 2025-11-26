@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QStandardPaths>
 #include <QDir>
+#include <QSet>
 
 CommandManager::CommandManager(QObject *parent)
     : QAbstractListModel(parent)
@@ -42,6 +43,10 @@ QVariant CommandManager::data(const QModelIndex &index, int role) const
         return entry.command;
     case DescriptionRole:
         return entry.description;
+    case GroupRole:
+        return entry.group;
+    case IsFolderRole:
+        return entry.isFolder;
     default:
         return QVariant();
     }
@@ -53,20 +58,34 @@ QHash<int, QByteArray> CommandManager::roleNames() const
     roles[TitleRole] = "title";
     roles[CommandRole] = "commandContent";
     roles[DescriptionRole] = "description";
+    roles[GroupRole] = "group";
+    roles[IsFolderRole] = "isFolder";
     return roles;
 }
 
-void CommandManager::addCommand(const QString &title, const QString &command, const QString &description)
+void CommandManager::addCommand(const QString &title, const QString &command, const QString &description, const QString &group)
 {
     if (!m_initialized) {
         initialize();
     }
-    m_allCommands.append({title, command, description});
+    m_allCommands.append({title, command, description, group, false});
     saveCommands();
     updateFilteredCommands();
+    emit groupsChanged();
 }
 
-void CommandManager::editCommand(int index, const QString &title, const QString &command, const QString &description)
+void CommandManager::addFolder(const QString &title, const QString &group)
+{
+    if (!m_initialized) {
+        initialize();
+    }
+    m_allCommands.append({title, QString(), QString(), group, true});
+    saveCommands();
+    updateFilteredCommands();
+    emit groupsChanged();
+}
+
+void CommandManager::editCommand(int index, const QString &title, const QString &command, const QString &description, const QString &group)
 {
     if (index < 0 || index >= m_filteredCommands.count())
         return;
@@ -77,14 +96,35 @@ void CommandManager::editCommand(int index, const QString &title, const QString 
         if (m_allCommands[i].title == currentEntry.title && 
             m_allCommands[i].command == currentEntry.command &&
             m_allCommands[i].description == currentEntry.description) {
-            
-            m_allCommands[i] = {title, command, description};
+            m_allCommands[i] = {title, command, description, group, false};
             break;
         }
     }
     
     saveCommands();
     updateFilteredCommands();
+    emit groupsChanged();
+}
+
+void CommandManager::editFolder(int index, const QString &title, const QString &group)
+{
+    if (index < 0 || index >= m_filteredCommands.count())
+        return;
+
+    const CommandEntry &currentEntry = m_filteredCommands[index];
+    for (int i = 0; i < m_allCommands.count(); ++i) {
+        if (m_allCommands[i].title == currentEntry.title &&
+            m_allCommands[i].command == currentEntry.command &&
+            m_allCommands[i].description == currentEntry.description &&
+            m_allCommands[i].isFolder == currentEntry.isFolder) {
+            m_allCommands[i] = {title, QString(), QString(), group, true};
+            break;
+        }
+    }
+
+    saveCommands();
+    updateFilteredCommands();
+    emit groupsChanged();
 }
 
 void CommandManager::removeCommand(int index)
@@ -106,6 +146,7 @@ void CommandManager::removeCommand(int index)
 
     saveCommands();
     updateFilteredCommands();
+    emit groupsChanged();
 }
 
 void CommandManager::copyToClipboard(const QString &text)
@@ -130,6 +171,17 @@ void CommandManager::setFilter(const QString &filterText)
     updateFilteredCommands();
 }
 
+void CommandManager::setGroupFilter(const QString &group)
+{
+    if (!m_initialized) {
+        initialize();
+    }
+    if (m_groupFilter == group)
+        return;
+    m_groupFilter = group;
+    updateFilteredCommands();
+}
+
 void CommandManager::initialize()
 {
     if (m_initialized)
@@ -144,15 +196,17 @@ void CommandManager::updateFilteredCommands()
     beginResetModel();
     m_filteredCommands.clear();
     
-    if (m_filterText.isEmpty()) {
-        m_filteredCommands = m_allCommands;
-    } else {
-        for (const auto &entry : m_allCommands) {
-            if (entry.title.contains(m_filterText, Qt::CaseInsensitive) ||
-                entry.command.contains(m_filterText, Qt::CaseInsensitive) ||
-                entry.description.contains(m_filterText, Qt::CaseInsensitive)) {
-                m_filteredCommands.append(entry);
-            }
+    for (const auto &entry : m_allCommands) {
+        // Group filter
+        if (!m_groupFilter.isEmpty() && m_groupFilter != "All" && entry.group != m_groupFilter)
+            continue;
+
+        // Text filter
+        if (m_filterText.isEmpty() ||
+            entry.title.contains(m_filterText, Qt::CaseInsensitive) ||
+            entry.command.contains(m_filterText, Qt::CaseInsensitive) ||
+            entry.description.contains(m_filterText, Qt::CaseInsensitive)) {
+            m_filteredCommands.append(entry);
         }
     }
     endResetModel();
@@ -174,10 +228,13 @@ void CommandManager::loadCommands()
         m_allCommands.append({
             obj["title"].toString(),
             obj["command"].toString(),
-            obj["description"].toString()
+            obj["description"].toString(),
+            obj["group"].toString(),
+            obj["isFolder"].toBool(false)
         });
     }
     updateFilteredCommands();
+    emit groupsChanged();
 }
 
 void CommandManager::saveCommands()
@@ -188,6 +245,8 @@ void CommandManager::saveCommands()
         obj["title"] = entry.title;
         obj["command"] = entry.command;
         obj["description"] = entry.description;
+        obj["group"] = entry.group;
+        obj["isFolder"] = entry.isFolder;
         array.append(obj);
     }
 
@@ -214,6 +273,8 @@ bool CommandManager::exportCommands(const QUrl &fileUrl)
         obj["title"] = entry.title;
         obj["command"] = entry.command;
         obj["description"] = entry.description;
+        obj["group"] = entry.group;
+        obj["isFolder"] = entry.isFolder;
         array.append(obj);
     }
 
@@ -251,11 +312,31 @@ bool CommandManager::importCommands(const QUrl &fileUrl)
         m_allCommands.append({
             obj["title"].toString(),
             obj["command"].toString(),
-            obj["description"].toString()
+            obj["description"].toString(),
+            obj["group"].toString(),
+            obj["isFolder"].toBool(false)
         });
     }
     
     saveCommands();
     updateFilteredCommands();
+    emit groupsChanged();
     return true;
+}
+
+QStringList CommandManager::groups()
+{
+    if (!m_initialized) initialize();
+    QSet<QString> set;
+    set.insert("All");
+    for (const auto &e : m_allCommands) {
+        if (!e.group.isEmpty()) set.insert(e.group);
+    }
+    QStringList list;
+    for (const QString &group : set)
+        list.append(group);
+    list.sort(Qt::CaseInsensitive);
+    list.removeAll("All");
+    list.prepend("All");
+    return list;
 }

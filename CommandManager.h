@@ -10,6 +10,8 @@ struct CommandEntry {
     QString title;
     QString command;
     QString description;
+    QString group; // new: group name for grouping
+    bool isFolder = false;
 };
 
 class CommandManager : public QAbstractListModel
@@ -19,7 +21,9 @@ public:
     enum CommandRoles {
         TitleRole = Qt::UserRole + 1,
         CommandRole,
-        DescriptionRole
+        DescriptionRole,
+        GroupRole,
+        IsFolderRole
     };
 
     explicit CommandManager(QObject *parent = nullptr);
@@ -29,14 +33,20 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE void addCommand(const QString &title, const QString &command, const QString &description);
-    Q_INVOKABLE void editCommand(int index, const QString &title, const QString &command, const QString &description);
+    Q_INVOKABLE void addCommand(const QString &title, const QString &command, const QString &description, const QString &group = QString());
+    Q_INVOKABLE void addFolder(const QString &title, const QString &group = QString());
+    Q_INVOKABLE void editCommand(int index, const QString &title, const QString &command, const QString &description, const QString &group = QString());
+    Q_INVOKABLE void editFolder(int index, const QString &title, const QString &group = QString());
     Q_INVOKABLE void removeCommand(int index);
     Q_INVOKABLE void copyToClipboard(const QString &text);
     Q_INVOKABLE void setFilter(const QString &filterText);
+    Q_INVOKABLE void setGroupFilter(const QString &group);
     Q_INVOKABLE bool exportCommands(const QUrl &fileUrl);
     Q_INVOKABLE bool importCommands(const QUrl &fileUrl);
     Q_INVOKABLE void initialize(); // Delayed initialization
+    Q_INVOKABLE QStringList groups();
+
+    Q_PROPERTY(QStringList groups READ groups NOTIFY groupsChanged)
 
     // Persistence
     void loadCommands();
@@ -48,8 +58,11 @@ private:
     QList<CommandEntry> m_allCommands;
     QList<CommandEntry> m_filteredCommands;
     QString m_filterText;
+    QString m_groupFilter;
     QString m_storagePath;
     bool m_initialized = false;
+signals:
+    void groupsChanged();
 };
 
 #endif // COMMANDMANAGER_H

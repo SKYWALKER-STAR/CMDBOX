@@ -65,6 +65,17 @@ ApplicationWindow {
                 }
             }
 
+            ComboBox {
+                id: groupCombo
+                model: commandManager.groups
+                currentIndex: 0
+                onCurrentTextChanged: {
+                    commandManager.setGroupFilter(currentText)
+                }
+                Layout.preferredWidth: 160
+                Layout.alignment: Qt.AlignVCenter
+            }
+
             ToolButton {
                 text: "⋮"
                 font.pixelSize: 24
@@ -131,17 +142,32 @@ ApplicationWindow {
             width: listView.width
             height: 60
             
-            Button {
+            ToolButton {
+                id: addButton
                 anchors.centerIn: parent
                 text: "+"
                 font.pixelSize: 24
                 width: 50
                 height: 50
-                onClicked: commandDialog.openForAdd()
+                onClicked: addMenu.open()
                 background: Rectangle {
-                    color: parent.down ? "#d0d0d0" : "#e0e0e0"
+                    color: addButton.pressed ? "#d0d0d0" : "#e0e0e0"
                     radius: 25
                     border.color: "#cccccc"
+                }
+            }
+
+            Menu {
+                id: addMenu
+                x: addButton.x
+                y: addButton.y + addButton.height + 2
+                MenuItem {
+                    text: "1. Add Folder"
+                    onTriggered: commandDialog.openForAddFolder()
+                }
+                MenuItem {
+                    text: "2. Add Command"
+                    onTriggered: commandDialog.openForAdd()
                 }
             }
         }
@@ -187,7 +213,7 @@ ApplicationWindow {
                     Button {
                         text: "修改"
                         onClicked: {
-                            commandDialog.openForEdit(index, model.title, model.commandContent, model.description)
+                            commandDialog.openForEdit(index, model.title, model.commandContent, model.description, model.group, model.isFolder)
                         }
                     }
                     Button {
@@ -225,36 +251,64 @@ ApplicationWindow {
 
     Dialog {
         id: commandDialog
-        title: editIndex === -1 ? "添加新命令" : "修改命令"
+        property int editIndex: -1
+        property bool folderMode: false
+        title: folderMode ? (editIndex === -1 ? "添加新分组" : "修改分组")
+                      : (editIndex === -1 ? "添加新命令" : "修改命令")
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         anchors.centerIn: parent
         width: 400
 
-        property int editIndex: -1
-
         function openForAdd() {
             editIndex = -1
+            folderMode = false
             titleField.text = ""
             commandField.text = ""
             descField.text = ""
+            groupField.text = ""
             open()
         }
 
-        function openForEdit(index, title, cmd, desc) {
+        function openForAddFolder() {
+            editIndex = -1
+            folderMode = true
+            titleField.text = ""
+            commandField.text = ""
+            descField.text = ""
+            groupField.text = ""
+            open()
+        }
+
+        function openForEdit(index, title, cmd, desc, group, isFolder) {
             editIndex = index
+            folderMode = !!isFolder
             titleField.text = title
             commandField.text = cmd
             descField.text = desc
+            // QML calls pass group as 4th arg when available
+            if (typeof(group) !== 'undefined') groupField.text = group
+            else groupField.text = ""
             open()
         }
 
         onAccepted: {
-            if (titleField.text !== "" && commandField.text !== "") {
+            if (titleField.text === "")
+                return
+            if (!folderMode && commandField.text === "")
+                return
+
+            if (folderMode) {
                 if (editIndex === -1) {
-                    commandManager.addCommand(titleField.text, commandField.text, descField.text)
+                    commandManager.addFolder(titleField.text, groupField.text)
                 } else {
-                    commandManager.editCommand(editIndex, titleField.text, commandField.text, descField.text)
+                    commandManager.editFolder(editIndex, titleField.text, groupField.text)
+                }
+            } else {
+                if (editIndex === -1) {
+                    commandManager.addCommand(titleField.text, commandField.text, descField.text, groupField.text)
+                } else {
+                    commandManager.editCommand(editIndex, titleField.text, commandField.text, descField.text, groupField.text)
                 }
             }
         }
@@ -273,7 +327,8 @@ ApplicationWindow {
                 id: commandField
                 placeholderText: "命令内容 (例如: tail -f /var/log/syslog)"
                 Layout.fillWidth: true
-                Layout.preferredHeight: 100
+                Layout.preferredHeight: folderMode ? 0 : 100
+                visible: !folderMode
                 background: Rectangle {
                     border.color: "#ccc"
                 }
@@ -282,6 +337,13 @@ ApplicationWindow {
             TextField {
                 id: descField
                 placeholderText: "描述 (可选)"
+                Layout.fillWidth: true
+                visible: !folderMode
+            }
+
+            TextField {
+                id: groupField
+                placeholderText: "分组 (可选)"
                 Layout.fillWidth: true
             }
         }
