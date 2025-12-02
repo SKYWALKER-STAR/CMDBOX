@@ -133,7 +133,7 @@ ApplicationWindow {
                 anchors.margins: 10
                 visible: isFolder
                 spacing: 8
-                
+
                 RowLayout {
                     Layout.fillWidth: true
                     visible: isFolder
@@ -259,6 +259,11 @@ ApplicationWindow {
                                     onClicked: {
                                         if (commandManager) commandManager.removeCommand(sourceIndex)
                                     }
+                                }
+
+                                ToolButton {
+                                    text: "</>"
+                                    onClicked: previewWin.openWith(title,commandContent)
                                 }
                             }
                             Rectangle {
@@ -482,4 +487,5 @@ ApplicationWindow {
             }
         }
     }
+    CommandBlok { id: previewWin }
 }
