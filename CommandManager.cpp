@@ -130,13 +130,11 @@ void CommandManager::editFolder(int index, const QString &title, const QString &
 }
 QVariantList CommandManager::commandsInFolder(const QString &folderName) const {
     QVariantList out;
-
-    //Debug
-    for (const CommandEntry &e : m_allCommands) {
-        qDebug() << "CommandEntry:" << e.title << e.group << e.isFolder;
-    }
+    qDebug() << "commandsInFolder: folderName=" << folderName;
+    qDebug() << "allCommands count=" << m_allCommands.size() << ", filtered count=" << m_filteredCommands.size();
+    
     for (const auto &c : m_allCommands) {
-        // assuming folder membership stored in c.group == folderName
+        // membership: command.group equals folder title
         if (!c.isFolder && c.group == folderName) {
             QVariantMap m;
             m["title"] = c.title;
@@ -144,11 +142,20 @@ QVariantList CommandManager::commandsInFolder(const QString &folderName) const {
             m["description"] = c.description;
             m["group"] = c.group;
             m["isFolder"] = false;
+            int filteredIdx = -1;
+            for (int fi = 0; fi < m_filteredCommands.size(); ++fi) {
+                const auto &f = m_filteredCommands[fi];
+                if (f.title == c.title && f.command == c.command && f.description == c.description && f.group == c.group && f.isFolder == c.isFolder) {
+                    filteredIdx = fi;
+                    break;
+                }
+            }
+            m["sourceIndex"] = filteredIdx; // -1 if filtered out
             out << m;
-            qDebug() << "QVM:" << m;
+            qDebug() << "commandsInFolder: add item title=" << c.title << ", group=" << c.group << ", sourceIndex=" << filteredIdx;
         }
     }
-    // Debug
+    qDebug() << "commandsInFolder: result size=" << out.size();
     qDebug() << "QVL:" << out;
     return out;
 }
@@ -236,6 +243,7 @@ void CommandManager::updateFilteredCommands()
         }
     }
     endResetModel();
+    emit commandsChanged();
 }
 
 void CommandManager::loadCommands()

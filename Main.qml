@@ -190,11 +190,26 @@ ApplicationWindow {
                     spacing: 6
                     interactive: false // 嵌套列表通常禁止独立滚动，随外层滚动
 
-                    // 关键：只显示属于当前 Folder 的命令
-                    // 假设 C++ 已经实现了 commandsInFolder(QString folderName)
-                    model: commandManager ? commandManager.commandsInFolder(title) : []
+                    // 使用 dataList 快照 + Connections 以便在模型变化时刷新
+                    property var dataList: commandManager ? commandManager.commandsInFolder(title) : []
+                    model: dataList
+                    Connections {
+                        target: commandManager
+                        function onCommandsChanged() {
+                            nested.dataList = commandManager ? commandManager.commandsInFolder(title) : []
+                        }
+                        function onGroupsChanged() {
+                            nested.dataList = commandManager ? commandManager.commandsInFolder(title) : []
+                        }
+                    }
 
                     delegate: ItemDelegate {
+                        // Declare explicit roles from dataList to avoid shadowing parent roles
+                        required property string title
+                        required property string commandContent
+                        required property string description
+                        required property string group
+                        required property int sourceIndex
                         width: nested.width
                         height: innerCol.implicitHeight + 12
                         background: Rectangle {
@@ -210,7 +225,7 @@ ApplicationWindow {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Label {
-                                    text: title // 这里的 title 是命令的标题
+                                    text: title // 使用嵌套模型的 title，而非父级
                                     font.bold: true
                                     Layout.fillWidth: true
                                 }
@@ -229,14 +244,14 @@ ApplicationWindow {
                                 Button {
                                     text: "修改"
                                     onClicked: {
-                                        // 修改命令，isFolder = false
-                                        if (commandDialog) commandDialog.openForEdit(index, title, commandContent, description, group, false)
+                                        // 使用 sourceIndex（来自 commandsInFolder 快照）指向主模型
+                                        if (commandDialog) commandDialog.openForEdit(sourceIndex, title, commandContent, description, group, false)
                                     }
                                 }
                                 Button {
                                     text: "删除"
                                     onClicked: {
-                                        if (commandManager) commandManager.removeCommand(index)
+                                        if (commandManager) commandManager.removeCommand(sourceIndex)
                                     }
                                 }
                             }
@@ -250,7 +265,7 @@ ApplicationWindow {
                                 Text {
                                     anchors.fill: parent
                                     anchors.margins: 5
-                                    text: commandContent
+                                    text: commandContent // 使用嵌套模型的 commandContent
                                     font.family: "Courier New"
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight

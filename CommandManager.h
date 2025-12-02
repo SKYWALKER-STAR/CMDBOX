@@ -64,6 +64,7 @@ private:
     bool m_initialized = false;
 signals:
     void groupsChanged();
+    void commandsChanged();
 };
 
 #endif // COMMANDMANAGER_H
