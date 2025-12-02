@@ -1,63 +1,113 @@
-# CMD BOX (cpaste-quick)
+<div align="center">
+# CMDBOX <br>
+</div>
+CMDBOX is a lightweight command management tool for operations engineers – record, search and copy frequently used commands fast.
 
-CMD BOX 是一款基于 Qt6 和 QML 开发的轻量级运维命令管理工具，旨在帮助运维工程师快速记录、搜索和复制常用命令。
+## Features
 
-## 功能特性
+* **Command management** – Add, edit and delete frequently used commands.
+* **One‑click copy** – Left‑click the list item or press the dedicated Copy button to place the command on the clipboard with a toast notification.
+* **Fuzzy search** – Case‑insensitive search over title, command content and description.
+* **Import / Export (JSON)** – Backup or share your command set easily.
+* **Keyboard shortcuts**:
+  * `Ctrl+F` Focus the search box
+  * `Ctrl+N` Open the Add dialog
+* **Cross‑platform** – Linux and Windows (build locally on each platform).
 
-*   **命令管理**：轻松添加、修改和删除常用命令。
-*   **一键复制**：点击命令即可复制到剪贴板，支持鼠标左键单击和专用按钮。
-*   **模糊搜索**：支持对命令标题、内容和描述进行模糊搜索，快速定位。
-*   **数据导入/导出**：支持 JSON 格式的数据导入和导出，方便备份和迁移。
-*   **快捷键支持**：
-    *   `Ctrl+F`: 聚焦搜索框
-    *   `Ctrl+N`: 新建命令
-*   **跨平台**：支持 Linux 和 Windows (需自行编译)。
+## Screenshots
+<div align="center">
+<img src="./capture.png",alt="example">
+</div>
 
-## 构建指南
+## Build
 
-### 依赖
+### Dependencies
 
-*   Qt 6.8 或更高版本 (包含 Qt Quick 模块)
-*   CMake 3.16+
-*   C++ 编译器 (GCC, Clang, MSVC)
+* Qt >= 6.8 (Qt Quick module required)
+* CMake >= 3.16
+* C++ compiler (GCC / Clang / MSVC / MinGW)
 
-### Linux 构建
+### Linux (fresh out‑of‑source build)
 
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build .
-```
-
-运行：
-```bash
+git clone <repo-url> cmdbox
+cd cmdbox
+mkdir -p build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j
 ./cmdbox
 ```
 
-### Windows 构建
+If Qt is installed in a custom prefix (example `/software/local/QT/6.10.1/gcc_64`):
+```bash
+export QT_HOME=/software/local/QT/6.10.1/gcc_64
+export PATH=$QT_HOME/bin:$PATH
+cmake -DCMAKE_PREFIX_PATH=$QT_HOME ..
+```
 
-1.  使用 Qt Creator 打开 `CMakeLists.txt`。
-2.  配置构建套件 (Kit)。
-3.  点击运行。
+#### One‑liner using helper script
+From project root you can also use the portable helper:
+```bash
+./build.sh                   # Debug build
+./build.sh -t Release -r     # Release build and run
+./build.sh -q /software/local/QT/6.10.1/gcc_64 -t Release
+```
 
-或者使用命令行：
+### Windows (Qt Creator)
+1. Open `CMakeLists.txt` in Qt Creator.
+2. Select a Kit (e.g. "Desktop Qt 6.x MinGW 64-bit").
+3. Build & Run.
+
+### Windows (CLI, MinGW example)
 ```powershell
 mkdir build
 cd build
-cmake -G "MinGW Makefiles" ..
-cmake --build .
+cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j
+./cmdbox.exe
 ```
 
-## 安装包制作
+## Packaging
 
-本项目支持使用 CPack 生成安装包（如 .deb）。
-
+### CPack (Deb + Tarball)
+After building:
 ```bash
 cd build
 cpack
 ```
+Outputs: `cmdbox-<version>-Linux.deb`, `cmdbox-<version>-Linux.tar.gz`.
 
-## 许可证
+### Manual self‑contained folder
+Use `package_manual.sh` (copies Qt libs & plugins) then compress `cmdbox_dist`.
+
+### CQtDeployer (recommended)
+Run:
+```bash
+./package_with_cqtdeployer.sh
+```
+Resulting `.deb` will include required Qt runtime pieces.
+
+## Import / Export
+Use menu (⋮) → Import / Export. JSON schema is an array of objects:
+```json
+[
+  { "title": "Check Docker images", "command": "docker images", "description": "List images" }
+]
+```
+
+## Troubleshooting
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Qt plugin "xcb" not loading | Missing system libs (`libxcb-cursor0`, etc.) | `sudo apt install libxcb-cursor0` |
+| Empty window / QML errors | Wrong QML import path | Ensure `QML2_IMPORT_PATH` or packaged `qml/` folder |
+| Cannot input Chinese | Missing input method env vars | Set `QT_IM_MODULE=fcitx` or `ibus` |
+
+Enable plugin debug:
+```bash
+export QT_DEBUG_PLUGINS=1
+./cmdbox
+```
+
+## License
 
 MIT License

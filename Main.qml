@@ -133,11 +133,8 @@ ApplicationWindow {
                 anchors.margins: 10
                 visible: isFolder
                 spacing: 8
-
-                // 1. 修复标题栏布局
+                
                 RowLayout {
-                    // 错误：anchors.fill: parent // 不能在 ColumnLayout 里用这个
-                    // 正确：
                     Layout.fillWidth: true
                     visible: isFolder
                     spacing: 6
