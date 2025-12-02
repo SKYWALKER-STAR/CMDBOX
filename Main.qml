@@ -112,8 +112,8 @@ ApplicationWindow {
             height: isFolder ? folderColumn.implicitHeight + 20 : cmdColumn.implicitHeight + 20
 
             onClicked: {
-                if (!commandManager)
-                    return
+                if (isFolder) return
+                if (!commandManager) return
                 commandManager.copyToClipboard(commandContent)
                 if (copyNotification) {
                     copyNotification.text = "已复制: " + title
@@ -204,6 +204,15 @@ ApplicationWindow {
                     }
 
                     delegate: ItemDelegate {
+                        // 点击嵌套元素进行复制
+                        onClicked: {
+                            if (!commandManager) return
+                            commandManager.copyToClipboard(commandContent)
+                            if (copyNotification) {
+                                copyNotification.text = "已复制: " + title
+                                copyNotification.open()
+                            }
+                        }
                         // Declare explicit roles from dataList to avoid shadowing parent roles
                         required property string title
                         required property string commandContent
@@ -280,70 +289,6 @@ ApplicationWindow {
                             }
                         }
                     }
-                }
-            }
-            
-            ColumnLayout {
-                id: cmdColumn
-                anchors.fill: parent
-                anchors.margins: 10
-                visible: !isFolder
-                spacing: 6
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Label {
-                        text: title
-                        font.bold: true
-                        font.pixelSize: 16
-                        Layout.fillWidth: true
-                    }
-                    Button {
-                        text: "复制"
-                        onClicked: {
-                            if (commandManager) {
-                                commandManager.copyToClipboard(commandContent)
-                                if (copyNotification) {
-                                    copyNotification.text = "已复制: " + title
-                                    copyNotification.open()
-                                }
-                            }
-                        }
-                    }
-                    Button {
-                        text: "修改"
-                        onClicked: {
-                            if (commandDialog) commandDialog.openForEdit(index, title, commandContent, description, group, false)
-                        }
-                    }
-                    Button {
-                        text: "删除"
-                        onClicked: {
-                            if (commandManager) commandManager.removeCommand(index)
-                        }
-                    }
-                }
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 48
-                    color: "#F5F5F5"
-                    radius: 3
-                    border.color: "#DDDDDD"
-                    Text {
-                        anchors.fill: parent
-                        anchors.margins: 6
-                        text: commandContent
-                        font.family: "Consolas"
-                        verticalAlignment: Text.AlignVCenter
-                        elide: Text.ElideRight
-                    }
-                }
-
-                Label {
-                    text: description
-                    color: "gray"
-                    font.pixelSize: 12
-                    visible: description !== ""
                 }
             }
         }
@@ -496,6 +441,7 @@ ApplicationWindow {
                 Component.onCompleted: {
                     if (editable && editText === "") editText = ""
                 }
+                visible: !commandDialog.folderMode
             }
         }
     }

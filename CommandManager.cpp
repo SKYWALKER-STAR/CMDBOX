@@ -70,7 +70,9 @@ void CommandManager::addCommand(const QString &title, const QString &command, co
         initialize();
     }
 
-    m_allCommands.append({title, command, description, group, false});
+    // Default empty group to "All" to ensure consistent grouping
+    QString finalGroup = group.trimmed().isEmpty() ? QStringLiteral("All") : group.trimmed();
+    m_allCommands.append({title, command, description, finalGroup, false});
     saveCommands();
     updateFilteredCommands();
     emit groupsChanged();
@@ -94,11 +96,12 @@ void CommandManager::editCommand(int index, const QString &title, const QString 
 
     // Find the original command in m_allCommands
     const CommandEntry &currentEntry = m_filteredCommands[index];
+    QString finalGroup = group.trimmed().isEmpty() ? QStringLiteral("All") : group.trimmed();
     for (int i = 0; i < m_allCommands.count(); ++i) {
         if (m_allCommands[i].title == currentEntry.title && 
             m_allCommands[i].command == currentEntry.command &&
             m_allCommands[i].description == currentEntry.description) {
-            m_allCommands[i] = {title, command, description, group, false};
+            m_allCommands[i] = {title, command, description, finalGroup, false};
             break;
         }
     }
