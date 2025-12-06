@@ -136,7 +136,7 @@ QVariantList CommandManager::commandsInFolder(const QString &folderName) const {
     qDebug() << "commandsInFolder: folderName=" << folderName;
     qDebug() << "allCommands count=" << m_allCommands.size() << ", filtered count=" << m_filteredCommands.size();
     
-    for (const auto &c : m_allCommands) {
+    for (const auto &c : m_filteredCommands) {
         // membership: command.group equals folder title
         if (!c.isFolder && c.group == folderName) {
             QVariantMap m;
@@ -200,8 +200,12 @@ void CommandManager::setFilter(const QString &filterText)
         initialize();
     }
     
-    if (m_filterText == filterText)
+    if (m_filterText == filterText) {
+        qDebug() << "Setting filter From inner:" << filterText;
         return;
+    }
+        
+    qDebug() << "Setting filter:" << filterText;
     
     m_filterText = filterText;
     updateFilteredCommands();
@@ -234,18 +238,20 @@ void CommandManager::updateFilteredCommands()
     
     for (const auto &entry : m_allCommands) {
         // Group filter
-        if (!m_groupFilter.isEmpty() && m_groupFilter != "All" && entry.group != m_groupFilter)
-            continue;
+        //if (!m_groupFilter.isEmpty() && m_groupFilter != "All" && entry.group != m_groupFilter)
+           //continue;
 
         // Text filter
         if (m_filterText.isEmpty() ||
             entry.title.contains(m_filterText, Qt::CaseInsensitive) ||
             entry.command.contains(m_filterText, Qt::CaseInsensitive) ||
             entry.description.contains(m_filterText, Qt::CaseInsensitive)) {
+            printf("Hello world from updateFilteredCommands inner\n");  
             m_filteredCommands.append(entry);
         }
     }
     endResetModel();
+    printf("Hello world from updateFilteredCommands\n");
     emit commandsChanged();
 }
 

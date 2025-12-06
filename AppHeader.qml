@@ -43,6 +43,7 @@ ToolBar {
             onTextChanged: {
                 if (commandManager)
                     commandManager.setFilter(text)
+                    console.log("Hello world from onTextChanged")
             }
             background: Rectangle {
                 color: "white"
