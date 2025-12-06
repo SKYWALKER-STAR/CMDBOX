@@ -133,8 +133,8 @@ void CommandManager::editFolder(int index, const QString &title, const QString &
 }
 QVariantList CommandManager::commandsInFolder(const QString &folderName) const {
     QVariantList out;
-    qDebug() << "commandsInFolder: folderName=" << folderName;
-    qDebug() << "allCommands count=" << m_allCommands.size() << ", filtered count=" << m_filteredCommands.size();
+    //qDebug() << "commandsInFolder: folderName=" << folderName;
+    //qDebug() << "allCommands count=" << m_allCommands.size() << ", filtered count=" << m_filteredCommands.size();
     
     for (const auto &c : m_filteredCommands) {
         // membership: command.group equals folder title
@@ -155,11 +155,11 @@ QVariantList CommandManager::commandsInFolder(const QString &folderName) const {
             }
             m["sourceIndex"] = filteredIdx; // -1 if filtered out
             out << m;
-            qDebug() << "commandsInFolder: add item title=" << c.title << ", group=" << c.group << ", sourceIndex=" << filteredIdx;
+            //qDebug() << "commandsInFolder: add item title=" << c.title << ", group=" << c.group << ", sourceIndex=" << filteredIdx;
         }
     }
-    qDebug() << "commandsInFolder: result size=" << out.size();
-    qDebug() << "QVL:" << out;
+    //qDebug() << "commandsInFolder: result size=" << out.size();
+    //qDebug() << "QVL:" << out;
     return out;
 }
 
@@ -240,18 +240,25 @@ void CommandManager::updateFilteredCommands()
         // Group filter
         //if (!m_groupFilter.isEmpty() && m_groupFilter != "All" && entry.group != m_groupFilter)
            //continue;
-
         // Text filter
         if (m_filterText.isEmpty() ||
             entry.title.contains(m_filterText, Qt::CaseInsensitive) ||
             entry.command.contains(m_filterText, Qt::CaseInsensitive) ||
-            entry.description.contains(m_filterText, Qt::CaseInsensitive)) {
-            printf("Hello world from updateFilteredCommands inner\n");  
+            entry.description.contains(m_filterText, Qt::CaseInsensitive) ||
+            entry.isFolder) {
+            qDebug() << "Match found:" << entry.title;
             m_filteredCommands.append(entry);
         }
     }
     endResetModel();
-    printf("Hello world from updateFilteredCommands\n");
+    qDebug() << "updateFilteredCommands finished. Count:" << m_filteredCommands.count();
+    qDebug() << "Filtered Commands List:";
+    for (const auto &entry : m_filteredCommands) {
+        qDebug() << "  Title:" << entry.title 
+                << " Command:" << entry.command 
+                << " Group:" << entry.group
+                << " IsFolder:" << entry.isFolder;
+}
     emit commandsChanged();
 }
 
