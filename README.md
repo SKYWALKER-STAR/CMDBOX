@@ -1,6 +1,6 @@
 <div align="center">
 <div style="margin: 20px 0;">
-  <img src="https://github.com/SKYWALKER-STAR/CMDBOX/blob/main/Logo.png">
+  <img src="https://github.com/SKYWALKER-STAR/CMDBOX/blob/main/Logo.svg">
 </div>
 
 # CMDBOX
