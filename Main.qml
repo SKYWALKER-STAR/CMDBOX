@@ -10,6 +10,24 @@ ApplicationWindow {
     height: 600
     title: "CMD BOX"
 
+    // 全局主题变量（便于统一调整）
+    property color bgColor: "#f4f6f8"
+    property color cardColor: "#ffffff"
+    property color subtleBorder: "#e6eaee"
+    property color primary: "#2563eb"      // 蓝色主色
+    property color primaryDark: "#1e40af"
+    property color accent: "#10b981"       // 绿色强调
+    property color textPrimary: "#111827"
+    property color textSecondary: "#6b7280"
+    property string uiFont: "Segoe UI, Roboto, Noto Sans, Arial"
+
+    font.family: uiFont
+
+    Rectangle {
+        anchors.fill: parent
+        color: bgColor
+    }
+
     Component.onCompleted: {
         if (commandManager)
             commandManager.initialize()
@@ -31,62 +49,80 @@ ApplicationWindow {
     
     header: ToolBar {
         id: appHeader
-        height: 60
-        padding: 10
+        height: 64
+        padding: 12
 
         property alias searchField: searchInput
 
         background: Rectangle {
-            color: "#f5f5f5"
-            border.color: "#e0e0e0"
-            border.width: 1
+            color: "transparent"
+            border.color: "transparent"
         }
 
         RowLayout {
             anchors.fill: parent
-            spacing: 15
+            spacing: 16
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
 
-            Label {
-                text: "CMD BOX"
-                font.bold: true
-                font.pixelSize: 20
-                Layout.alignment: Qt.AlignVCenter
-                color: "#333333"
-                leftPadding: 10
+            ColumnLayout {
+                Layout.preferredWidth: 220
+                spacing: 2
+                Label {
+                    text: "CMD BOX"
+                    font.bold: true
+                    font.pixelSize: 20
+                    color: textPrimary
+                }
+                Label {
+                    text: "快速管理你的常用命令"
+                    font.pixelSize: 12
+                    color: textSecondary
+                }
             }
 
             TextField {
                 id: searchInput
                 placeholderText: "搜索命令..."
                 Layout.fillWidth: true
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: 44
                 Layout.alignment: Qt.AlignVCenter
                 verticalAlignment: Text.AlignVCenter
-                leftPadding: 10
+                leftPadding: 12
+                rightPadding: 12
+                font.pixelSize: 14
                 onTextChanged: {
                     if (commandManager) 
                         commandManager.setFilter(text)
                 }
                 background: Rectangle {
-                    color: "white"
-                    radius: 8
-                    border.color: searchInput.activeFocus ? "#2196F3" : "#e0e0e0"
-                    border.width: 1
+                    color: cardColor
+                    radius: 10
+                    border.color: searchInput.activeFocus ? primary : subtleBorder
+                    border.width: searchInput.activeFocus ? 1.5 : 1
+                    // subtle inner gradient
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.darker(cardColor, 1.02) }
+                        GradientStop { position: 1.0; color: cardColor }
+                    }
+                    // soft shadow simulated by inner stroke
                 }
             }
 
             ToolButton {
                 id: menuButton
                 text: "⋮"
-                font.pixelSize: 24
+                font.pixelSize: 20
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: optionsMenu.open()
                 background: Rectangle {
                     implicitWidth: 40
                     implicitHeight: 40
-                    radius: 20
-                    color: menuButton.pressed ? "#d0d0d0" : "transparent"
+                    radius: 12
+                    color: menuButton.pressed ? "#eef2ff" : "transparent"
+                    border.color: "transparent"
                 }
+                contentItem: Label { text: menuButton.text; color: textSecondary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
 
             Menu {
@@ -110,34 +146,36 @@ ApplicationWindow {
         anchors.fill: parent
         model: commandManager
         clip: true
-        spacing: 10 
+        spacing: 12 
         signal addFolderRequested()
         signal addCommandRequested()
         
         footer: Item {
             width: listView.width
-            height: 60
+            height: 78
             z: 2
 
             ToolButton {
                 id: addButton
                 anchors.centerIn: parent
                 text: "+"
-                font.pixelSize: 24
-                width: 50
-                height: 50
+                font.pixelSize: 22
+                width: 56
+                height: 56
                 onClicked: addMenu.open()
                 background: Rectangle {
-                    color: addButton.pressed ? "#d0d0d0" : "#e0e0e0"
-                    radius: 25
-                    border.color: "#cccccc"
+                    color: addButton.pressed ? "#e6f9f0" : "#10b981"
+                    radius: 28
+                    border.color: Qt.darker("#10b981", 1.05)
+                    border.width: 1
                 }
+                contentItem: Label { text: addButton.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
             Menu {
                 id: addMenu
                 z: 3
                 x: addButton.x
-                y: addButton.y + addButton.height + 2
+                y: addButton.y + addButton.height + 6
                 MenuItem {
                     text: "Add Folder"
                     onTriggered: {
@@ -178,7 +216,7 @@ ApplicationWindow {
         delegate: ItemDelegate {
             width: listView.width
             // 动态计算高度：如果是 Folder，高度由 folderColumn 决定
-            height: isFolder ? folderColumn.implicitHeight + 20 : cmdColumn.implicitHeight + 20
+            height: isFolder ? folderColumn.implicitHeight + 22 : cmdColumn.implicitHeight + 22
 
             onClicked: {
                 if (isFolder) return
@@ -191,32 +229,43 @@ ApplicationWindow {
             }
 
             background: Rectangle {
-                color: parent.hovered ? "#f9f9f9ff" : "white"
-                border.color: "#e0e0e0"
-                radius: 5
+                color: parent.hovered ? "#ffffff" : cardColor
+                border.color: parent.hovered ? subtleBorder : subtleBorder
+                radius: 10
+                // soft elevation effect via tiny shadow (simulated)
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.lighter(cardColor, 1.01) }
+                    GradientStop { position: 1.0; color: cardColor }
+                }
             }
 
             ColumnLayout {
                 id: folderColumn
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 12
                 visible: isFolder
-                spacing: 8
+                spacing: 10
 
                 RowLayout {
                     Layout.fillWidth: true
                     visible: isFolder
-                    spacing: 6
+                    spacing: 10
 
                     Label {
                         text: title
                         font.bold: true
-                        font.pixelSize: 16
+                        font.pixelSize: 15
                         Layout.fillWidth: true
+                        color: textPrimary
                     }
 
                     Button {
                         text: "复制"
+                        background: Rectangle {
+                            color: "transparent"
+                            border.color: subtleBorder
+                            radius: 6
+                        }
                         onClicked: {
                             if (!commandManager) return
                             commandManager.copyToClipboard(commandContent)
@@ -253,7 +302,7 @@ ApplicationWindow {
                     Layout.preferredHeight: visible ? contentItem.childrenRect.height : 0
                     visible: true
                     clip: true
-                    spacing: 6
+                    spacing: 8
                     interactive: false // 嵌套列表通常禁止独立滚动，随外层滚动
 
                     // 使用 dataList 快照 + Connections 以便在模型变化时刷新
@@ -288,21 +337,22 @@ ApplicationWindow {
                         width: nested.width
                         height: innerCol.implicitHeight + 12
                         background: Rectangle {
-                            color: parent.hovered ? "#FAFAFA" : "white"
-                            border.color: "#E0E0E0"
-                            radius: 5
+                            color: parent.hovered ? "#ffffff" : cardColor
+                            border.color: subtleBorder
+                            radius: 8
                         }
                         ColumnLayout {
                             id: innerCol
                             anchors.fill: parent
                             anchors.margins: 8
-                            spacing: 6
+                            spacing: 8
                             RowLayout {
                                 Layout.fillWidth: true
                                 Label {
                                     text: title // 使用嵌套模型的 title，而非父级
                                     font.bold: true
                                     Layout.fillWidth: true
+                                    color: textPrimary
                                 }
                                 Button {
                                     text: "复制"
@@ -337,24 +387,25 @@ ApplicationWindow {
                             }
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 40
-                                color: "#f5f5f5"
-                                radius: 3
-                                border.color: "#dddddd"
+                                height: 44
+                                color: "#f7fafc"
+                                radius: 6
+                                border.color: "#eef2f5"
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 5
+                                    anchors.margins: 8
                                     text: commandContent // 使用嵌套模型的 commandContent
                                     font.family: "Courier New"
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight
+                                    color: textPrimary
                                 }
                             }
 
                             Label {
                                 text: description
-                                color: "gray"
+                                color: textSecondary
                                 font.pixelSize: 12
                                 visible: description !== ""
                             }
@@ -378,7 +429,12 @@ ApplicationWindow {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         anchors.centerIn: parent
-        width: 400
+        width: 480
+        background: Rectangle {
+            color: cardColor
+            border.color: subtleBorder
+            radius: 12
+        }
 
         function groupText() {
             if (!groupField) return ""
@@ -472,7 +528,8 @@ ApplicationWindow {
 
         contentItem: ColumnLayout {
             width: commandDialog.width
-            spacing: 10
+            spacing: 12
+            anchors.margins: 14
 
             TextField {
                 id: titleFieldCmd
@@ -492,9 +549,10 @@ ApplicationWindow {
                 id: commandField
                 placeholderText: "命令内容 (例如: tail -f /var/log/syslog)"
                 Layout.fillWidth: true
-                Layout.preferredHeight: commandDialog.folderMode ? 0 : 100
+                Layout.preferredHeight: commandDialog.folderMode ? 0 : 120
                 visible: !commandDialog.folderMode
-                background: Rectangle { border.color: "#ccc" }
+                font.family: "Courier New"
+                background: Rectangle { border.color: subtleBorder; color: "#fbfdff"; radius: 8 }
             }
 
             TextField {
@@ -517,11 +575,41 @@ ApplicationWindow {
         }
     }
 
-    ToolTip {
+    // 使用 Popup 替代 ToolTip，因为 ToolTip 不支持 anchors
+    Popup {
         id: copyNotification
-        text: "命令已复制到剪贴板"
-        timeout: 2000
-        anchors.centerIn: parent
+        property alias text: notificationText.text
+        width: notificationText.implicitWidth + 32
+        height: 40
+        x: (parent.width - width) / 2
+        y: parent.height - height - 24
+        closePolicy: Popup.NoAutoClose
+        
+        Timer {
+            id: notificationTimer
+            interval: 2000
+            onTriggered: copyNotification.close()
+        }
+        
+        function open() {
+            visible = true
+            notificationTimer.restart()
+        }
+
+        background: Rectangle {
+            color: "#111827"
+            radius: 8
+            opacity: 0.95
+        }
+        
+        contentItem: Text {
+            id: notificationText
+            text: "命令已复制到剪贴板"
+            color: "white"
+            font.pixelSize: 13
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     FileDialog {
