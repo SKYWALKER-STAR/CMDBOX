@@ -10,15 +10,15 @@ ApplicationWindow {
     height: 600
     title: "CMD BOX"
 
-    // 全局主题变量（便于统一调整）
-    property color bgColor: "#f4f6f8"
+    // 全局主题变量（经典黑白 - 现代极简）
+    property color bgColor: "#ffffff"      // 纯白背景
     property color cardColor: "#ffffff"
-    property color subtleBorder: "#e6eaee"
-    property color primary: "#2563eb"      // 蓝色主色
-    property color primaryDark: "#1e40af"
-    property color accent: "#10b981"       // 绿色强调
-    property color textPrimary: "#111827"
-    property color textSecondary: "#6b7280"
+    property color subtleBorder: "#e5e5e5" // 极浅灰边框
+    property color primary: "#171717"      // 几乎纯黑
+    property color primaryDark: "#000000"  // 纯黑
+    property color accent: "#525252"       // 中灰
+    property color textPrimary: "#0a0a0a"  // 墨黑
+    property color textSecondary: "#737373" // 深灰
     property string uiFont: "Segoe UI, Roboto, Noto Sans, Arial"
 
     font.family: uiFont
@@ -96,16 +96,19 @@ ApplicationWindow {
                         commandManager.setFilter(text)
                 }
                 background: Rectangle {
-                    color: cardColor
-                    radius: 10
-                    border.color: searchInput.activeFocus ? primary : subtleBorder
-                    border.width: searchInput.activeFocus ? 1.5 : 1
-                    // subtle inner gradient
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.darker(cardColor, 1.02) }
-                        GradientStop { position: 1.0; color: cardColor }
+                    color: "#f5f5f5" // Slight gray for input area
+                    radius: 6
+                    border.color: "transparent" // Flat style usually has no border or minimal
+                    border.width: 0 
+                    
+                    // Add a focus indicator
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 6
+                        color: "transparent"
+                        border.color: searchInput.activeFocus ? primary : "transparent"
+                        border.width: 1.5
                     }
-                    // soft shadow simulated by inner stroke
                 }
             }
 
@@ -119,10 +122,13 @@ ApplicationWindow {
                     implicitWidth: 40
                     implicitHeight: 40
                     radius: 12
-                    color: menuButton.pressed ? "#eef2ff" : "transparent"
-                    border.color: "transparent"
+                    color: menuButton.pressed ? "#f5f5f5" : "transparent"
+                    border.color: menuButton.pressed ? subtleBorder : "transparent"
+                    border.width: menuButton.pressed ? 1 : 0
                 }
                 contentItem: Label { text: menuButton.text; color: textSecondary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                scale: menuButton.pressed ? 0.95 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
             }
 
             Menu {
@@ -164,12 +170,12 @@ ApplicationWindow {
                 height: 56
                 onClicked: addMenu.open()
                 background: Rectangle {
-                    color: addButton.pressed ? "#e6f9f0" : "#10b981"
+                    color: addButton.pressed ? primaryDark : primary
                     radius: 28
-                    border.color: Qt.darker("#10b981", 1.05)
-                    border.width: 1
                 }
                 contentItem: Label { text: addButton.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                scale: addButton.pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
             }
             Menu {
                 id: addMenu
@@ -229,14 +235,10 @@ ApplicationWindow {
             }
 
             background: Rectangle {
-                color: parent.hovered ? "#ffffff" : cardColor
-                border.color: parent.hovered ? subtleBorder : subtleBorder
-                radius: 10
-                // soft elevation effect via tiny shadow (simulated)
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.lighter(cardColor, 1.01) }
-                    GradientStop { position: 1.0; color: cardColor }
-                }
+                color: cardColor
+                border.color: parent.hovered ? primary : subtleBorder
+                border.width: 1
+                radius: 6 // Sharper corners
             }
 
             ColumnLayout {
@@ -259,13 +261,9 @@ ApplicationWindow {
                         color: textPrimary
                     }
 
-                    Button {
+                    CButton {
                         text: "复制"
-                        background: Rectangle {
-                            color: "transparent"
-                            border.color: subtleBorder
-                            radius: 6
-                        }
+                        theme: "primary"
                         onClicked: {
                             if (!commandManager) return
                             commandManager.copyToClipboard(commandContent)
@@ -275,21 +273,24 @@ ApplicationWindow {
                             }
                         }
                     }
-                    Button {
+                    CButton {
                         text: "修改"
+                        theme: "warning"
                         onClicked: {
                             // 注意：这里传入 true 表示是 folder
                             commandDialog.openForEdit(index, title, commandContent, description, group, true)
                         }
                     }
-                    Button {
+                    CButton {
                         text: "删除"
+                        theme: "danger"
                         onClicked: {
                             if (commandManager) commandManager.removeCommand(index)
                         }
                     }
-                    Button {
+                    CButton {
                         text: nested.visible ? "收起" : "展开"
+                        theme: "neutral"
                         onClicked: nested.visible = !nested.visible
                     }
                 }
@@ -337,9 +338,10 @@ ApplicationWindow {
                         width: nested.width
                         height: innerCol.implicitHeight + 12
                         background: Rectangle {
-                            color: parent.hovered ? "#ffffff" : cardColor
+                            color: cardColor
                             border.color: subtleBorder
-                            radius: 8
+                            border.width: 1
+                            radius: 4
                         }
                         ColumnLayout {
                             id: innerCol
@@ -354,8 +356,9 @@ ApplicationWindow {
                                     Layout.fillWidth: true
                                     color: textPrimary
                                 }
-                                Button {
+                                CButton {
                                     text: "复制"
+                                    theme: "primary"
                                     onClicked: {
                                         if (commandManager) {
                                             commandManager.copyToClipboard(commandContent)
@@ -366,22 +369,26 @@ ApplicationWindow {
                                         }
                                     }
                                 }
-                                Button {
+                                CButton {
                                     text: "修改"
+                                    theme: "warning"
                                     onClicked: {
                                         // 使用 sourceIndex（来自 commandsInFolder 快照）指向主模型
                                         if (commandDialog) commandDialog.openForEdit(sourceIndex, title, commandContent, description, group, false)
                                     }
                                 }
-                                Button {
+                                CButton {
                                     text: "删除"
+                                    theme: "danger"
                                     onClicked: {
                                         if (commandManager) commandManager.removeCommand(sourceIndex)
                                     }
                                 }
 
-                                ToolButton {
+                                CButton {
                                     text: "</>"
+                                    theme: "success"
+                                    implicitWidth: 40
                                     onClicked: previewWin.openWith(title,commandContent)
                                 }
                             }
@@ -552,7 +559,7 @@ ApplicationWindow {
                 Layout.preferredHeight: commandDialog.folderMode ? 0 : 120
                 visible: !commandDialog.folderMode
                 font.family: "Courier New"
-                background: Rectangle { border.color: subtleBorder; color: "#fbfdff"; radius: 8 }
+                background: Rectangle { border.color: subtleBorder; color: "#fafafa"; radius: 6 }
             }
 
             TextField {
@@ -597,7 +604,7 @@ ApplicationWindow {
         }
 
         background: Rectangle {
-            color: "#111827"
+            color: textPrimary
             radius: 8
             opacity: 0.95
         }
