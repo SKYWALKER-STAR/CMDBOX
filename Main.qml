@@ -6,8 +6,8 @@ import QtQuick.Dialogs
 
 ApplicationWindow {
     visible: true
-    width: 800
-    height: 600
+    width: 1200
+    height: 900
     title: "CMD BOX"
 
     // 全局主题变量（经典黑白 - 现代极简）
@@ -474,8 +474,13 @@ ApplicationWindow {
         model: commandManager
         
         modal: true
-        anchors.centerIn: parent
-        width: 520
+        // 使用 x 和 y 手动居中，确保不会超出窗口
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        // 响应式宽度：最大不超过父窗口宽度的 80%，且不超过 480px
+        width: Math.min(480, parent.width * 0.8)
+        // 响应式高度：最大不超过父窗口高度的 75%
+        height: Math.min(implicitHeight, parent.height * 0.75)
         padding: 0
         
         // 移除默认按钮，使用自定义按钮
@@ -483,7 +488,7 @@ ApplicationWindow {
         
         background: Rectangle {
             color: "#ffffff"
-            radius: 16
+            radius: 12
             border.color: "#e5e5e5"
             border.width: 1
         }
@@ -569,18 +574,18 @@ ApplicationWindow {
             // 标题栏
             Rectangle {
                 Layout.fillWidth: true
-                height: 60
+                height: 52
                 color: "transparent"
                 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 24
-                    anchors.rightMargin: 16
+                    anchors.leftMargin: 20
+                    anchors.rightMargin: 12
                     
                     // 图标
                     Text {
                         text: commandDialog.folderMode ? "📁" : "⌘"
-                        font.pixelSize: 24
+                        font.pixelSize: 20
                     }
                     
                     // 标题
@@ -588,7 +593,7 @@ ApplicationWindow {
                         text: commandDialog.folderMode 
                               ? (commandDialog.editIndex === -1 ? "新建分组" : "编辑分组")
                               : (commandDialog.editIndex === -1 ? "新建命令" : "编辑命令")
-                        font.pixelSize: 18
+                        font.pixelSize: 16
                         font.weight: Font.DemiBold
                         color: "#171717"
                         Layout.fillWidth: true
@@ -596,15 +601,15 @@ ApplicationWindow {
                     
                     // 关闭按钮
                     Rectangle {
-                        width: 32
-                        height: 32
-                        radius: 16
+                        width: 28
+                        height: 28
+                        radius: 14
                         color: closeBtn.containsMouse ? "#f5f5f5" : "transparent"
                         
                         Text {
                             anchors.centerIn: parent
                             text: "✕"
-                            font.pixelSize: 14
+                            font.pixelSize: 12
                             color: "#737373"
                         }
                         
@@ -631,18 +636,18 @@ ApplicationWindow {
             // 表单内容
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.margins: 24
-                spacing: 20
+                Layout.margins: 20
+                spacing: 16
                 
                 // 标题输入（命令模式）
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
                     visible: !commandDialog.folderMode
                     
                     Text {
                         text: "命令名称"
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         color: "#525252"
                     }
@@ -651,17 +656,17 @@ ApplicationWindow {
                         id: titleFieldCmd
                         placeholderText: "例如：查看系统日志"
                         Layout.fillWidth: true
-                        font.pixelSize: 14
-                        leftPadding: 14
-                        rightPadding: 14
-                        topPadding: 12
-                        bottomPadding: 12
+                        font.pixelSize: 13
+                        leftPadding: 12
+                        rightPadding: 12
+                        topPadding: 10
+                        bottomPadding: 10
                         
                         background: Rectangle {
                             color: titleFieldCmd.activeFocus ? "#ffffff" : "#fafafa"
                             border.color: titleFieldCmd.activeFocus ? "#171717" : "#e5e5e5"
                             border.width: titleFieldCmd.activeFocus ? 2 : 1
-                            radius: 8
+                            radius: 6
                             
                             Behavior on border.color { ColorAnimation { duration: 150 } }
                             Behavior on border.width { NumberAnimation { duration: 150 } }
@@ -672,12 +677,12 @@ ApplicationWindow {
                 // 标题输入（分组模式）
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
                     visible: commandDialog.folderMode
                     
                     Text {
                         text: "分组名称"
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         color: "#525252"
                     }
@@ -686,17 +691,17 @@ ApplicationWindow {
                         id: titleFieldFolder
                         placeholderText: "例如：服务器运维"
                         Layout.fillWidth: true
-                        font.pixelSize: 14
-                        leftPadding: 14
-                        rightPadding: 14
-                        topPadding: 12
-                        bottomPadding: 12
+                        font.pixelSize: 13
+                        leftPadding: 12
+                        rightPadding: 12
+                        topPadding: 10
+                        bottomPadding: 10
                         
                         background: Rectangle {
                             color: titleFieldFolder.activeFocus ? "#ffffff" : "#fafafa"
                             border.color: titleFieldFolder.activeFocus ? "#171717" : "#e5e5e5"
                             border.width: titleFieldFolder.activeFocus ? 2 : 1
-                            radius: 8
+                            radius: 6
                             
                             Behavior on border.color { ColorAnimation { duration: 150 } }
                             Behavior on border.width { NumberAnimation { duration: 150 } }
@@ -707,36 +712,36 @@ ApplicationWindow {
                 // 命令内容
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
                     visible: !commandDialog.folderMode
                     
                     Text {
                         text: "命令内容"
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         color: "#525252"
                     }
                     
                     ScrollView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 100
+                        Layout.preferredHeight: 80
                         
                         TextArea {
                             id: commandField
                             placeholderText: "例如：tail -f /var/log/syslog"
-                            font.pixelSize: 13
+                            font.pixelSize: 12
                             font.family: "JetBrains Mono, Consolas, Monaco, monospace"
                             wrapMode: TextArea.Wrap
-                            leftPadding: 14
-                            rightPadding: 14
-                            topPadding: 12
-                            bottomPadding: 12
+                            leftPadding: 12
+                            rightPadding: 12
+                            topPadding: 10
+                            bottomPadding: 10
                             
                             background: Rectangle {
                                 color: commandField.activeFocus ? "#1a1a1a" : "#262626"
                                 border.color: commandField.activeFocus ? "#404040" : "#333333"
                                 border.width: 1
-                                radius: 8
+                                radius: 6
                                 
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -752,12 +757,12 @@ ApplicationWindow {
                 // 描述
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
                     visible: !commandDialog.folderMode
                     
                     Text {
                         text: "描述（可选）"
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         color: "#525252"
                     }
@@ -766,17 +771,17 @@ ApplicationWindow {
                         id: descField
                         placeholderText: "简要说明这条命令的用途"
                         Layout.fillWidth: true
-                        font.pixelSize: 14
-                        leftPadding: 14
-                        rightPadding: 14
-                        topPadding: 12
-                        bottomPadding: 12
+                        font.pixelSize: 13
+                        leftPadding: 12
+                        rightPadding: 12
+                        topPadding: 10
+                        bottomPadding: 10
                         
                         background: Rectangle {
                             color: descField.activeFocus ? "#ffffff" : "#fafafa"
                             border.color: descField.activeFocus ? "#171717" : "#e5e5e5"
                             border.width: descField.activeFocus ? 2 : 1
-                            radius: 8
+                            radius: 6
                             
                             Behavior on border.color { ColorAnimation { duration: 150 } }
                             Behavior on border.width { NumberAnimation { duration: 150 } }
@@ -787,12 +792,12 @@ ApplicationWindow {
                 // 分组选择
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
                     visible: !commandDialog.folderMode
                     
                     Text {
                         text: "所属分组"
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         color: "#525252"
                     }
@@ -802,20 +807,20 @@ ApplicationWindow {
                         editable: true
                         model: commandDialog.model ? commandDialog.model.groups : []
                         Layout.fillWidth: true
-                        font.pixelSize: 14
+                        font.pixelSize: 13
                         
                         background: Rectangle {
                             color: groupField.pressed ? "#f5f5f5" : "#fafafa"
                             border.color: groupField.activeFocus ? "#171717" : "#e5e5e5"
                             border.width: groupField.activeFocus ? 2 : 1
-                            radius: 8
+                            radius: 6
                             
                             Behavior on border.color { ColorAnimation { duration: 150 } }
                         }
                         
                         contentItem: Text {
-                            leftPadding: 14
-                            rightPadding: groupField.indicator.width + 14
+                            leftPadding: 12
+                            rightPadding: groupField.indicator.width + 12
                             text: groupField.editText || groupField.displayText || "选择或输入分组名"
                             font: groupField.font
                             color: (groupField.editText || groupField.displayText) ? "#171717" : "#a3a3a3"
@@ -824,7 +829,7 @@ ApplicationWindow {
                         }
                         
                         indicator: Text {
-                            x: groupField.width - width - 14
+                            x: groupField.width - width - 12
                             y: (groupField.height - height) / 2
                             text: "▼"
                             font.pixelSize: 10
@@ -837,7 +842,7 @@ ApplicationWindow {
             // 底部按钮区
             Rectangle {
                 Layout.fillWidth: true
-                height: 72
+                height: 56
                 color: "#fafafa"
                 
                 // 顶部分隔线
@@ -852,14 +857,14 @@ ApplicationWindow {
                 RowLayout {
                     anchors.centerIn: parent
                     anchors.right: parent.right
-                    anchors.rightMargin: 24
-                    spacing: 12
+                    anchors.rightMargin: 20
+                    spacing: 10
                     
                     // 取消按钮
                     Rectangle {
-                        width: 88
-                        height: 40
-                        radius: 8
+                        width: 72
+                        height: 34
+                        radius: 6
                         color: cancelBtn.containsMouse ? "#f5f5f5" : "#ffffff"
                         border.color: "#e5e5e5"
                         border.width: 1
@@ -867,7 +872,7 @@ ApplicationWindow {
                         Text {
                             anchors.centerIn: parent
                             text: "取消"
-                            font.pixelSize: 14
+                            font.pixelSize: 13
                             font.weight: Font.Medium
                             color: "#525252"
                         }
@@ -885,15 +890,15 @@ ApplicationWindow {
                     
                     // 确认按钮
                     Rectangle {
-                        width: 88
-                        height: 40
-                        radius: 8
+                        width: 72
+                        height: 34
+                        radius: 6
                         color: confirmBtn.pressed ? "#000000" : (confirmBtn.containsMouse ? "#262626" : "#171717")
                         
                         Text {
                             anchors.centerIn: parent
                             text: commandDialog.editIndex === -1 ? "创建" : "保存"
-                            font.pixelSize: 14
+                            font.pixelSize: 13
                             font.weight: Font.Medium
                             color: "#ffffff"
                         }
