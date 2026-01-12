@@ -471,19 +471,21 @@ ApplicationWindow {
         property int editIndex: -1
         property bool folderMode: false
         
-        // bind to global context property
         model: commandManager
         
-        title: folderMode ? (editIndex === -1 ? "添加新分组" : "修改分组")
-                          : (editIndex === -1 ? "添加新命令" : "修改命令")
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
         anchors.centerIn: parent
-        width: 480
+        width: 520
+        padding: 0
+        
+        // 移除默认按钮，使用自定义按钮
+        standardButtons: Dialog.NoButton
+        
         background: Rectangle {
-            color: cardColor
-            border.color: subtleBorder
-            radius: 12
+            color: "#ffffff"
+            radius: 16
+            border.color: "#e5e5e5"
+            border.width: 1
         }
 
         function groupText() {
@@ -538,37 +540,22 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            console.log("Into onAccepted")
-            if (!model) {
-                console.log("onAccepted: !commandManager")
-                return
-            }
+            if (!model) return
             if (folderMode) {
-                if (titleFieldFolder.text.trim() === "") {
-                    console.log("onAccepted: folder title empty")
-                    return
-                }
+                if (titleFieldFolder.text.trim() === "") return
             } else {
-                if (titleFieldCmd.text.trim() === "") {
-                    console.log("onAccepted: cmd title empty")
-                    return
-                }
-                if (commandField.text.trim() === "") {
-                    console.log("onAccepted: cmd content empty")
-                    return
-                }
+                if (titleFieldCmd.text.trim() === "") return
+                if (commandField.text.trim() === "") return
             }
 
             const g = groupText()
 
             if (folderMode) {
-                console.log("Processing FolderMode")
                 if (editIndex === -1)
                     model.addFolder(titleFieldFolder.text, g)
                 else
                     model.editFolder(editIndex, titleFieldFolder.text, g)
             } else {
-                console.log("Processing CommandMode")
                 if (editIndex === -1)
                     model.addCommand(titleFieldCmd.text, commandField.text, descField.text, g)
                 else
@@ -577,50 +564,351 @@ ApplicationWindow {
         }
 
         contentItem: ColumnLayout {
-            width: commandDialog.width
-            spacing: 12
-            anchors.margins: 14
-
-            TextField {
-                id: titleFieldCmd
-                placeholderText: "标题 (例如: 查看日志)"
+            spacing: 0
+            
+            // 标题栏
+            Rectangle {
                 Layout.fillWidth: true
-                visible: !commandDialog.folderMode
-            }
-
-            TextField {
-                id: titleFieldFolder
-                placeholderText: "分组名称"
-                Layout.fillWidth: true
-                visible: commandDialog.folderMode
-            }
-
-            TextField {
-                id: commandField
-                placeholderText: "命令内容 (例如: tail -f /var/log/syslog)"
-                Layout.fillWidth: true
-                Layout.preferredHeight: commandDialog.folderMode ? 0 : 120
-                visible: !commandDialog.folderMode
-                font.family: "Courier New"
-                background: Rectangle { border.color: subtleBorder; color: "#fafafa"; radius: 6 }
-            }
-
-            TextField {
-                id: descField
-                placeholderText: "描述 (可选)"
-                Layout.fillWidth: true
-                visible: !commandDialog.folderMode
-            }
-
-            ComboBox {
-                id: groupField
-                editable: true
-                model: commandDialog.model ? commandDialog.model.groups : []
-                Layout.fillWidth: true
-                Component.onCompleted: {
-                    if (editable && editText === "") editText = ""
+                height: 60
+                color: "transparent"
+                
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 24
+                    anchors.rightMargin: 16
+                    
+                    // 图标
+                    Text {
+                        text: commandDialog.folderMode ? "📁" : "⌘"
+                        font.pixelSize: 24
+                    }
+                    
+                    // 标题
+                    Text {
+                        text: commandDialog.folderMode 
+                              ? (commandDialog.editIndex === -1 ? "新建分组" : "编辑分组")
+                              : (commandDialog.editIndex === -1 ? "新建命令" : "编辑命令")
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
+                        color: "#171717"
+                        Layout.fillWidth: true
+                    }
+                    
+                    // 关闭按钮
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 16
+                        color: closeBtn.containsMouse ? "#f5f5f5" : "transparent"
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: "✕"
+                            font.pixelSize: 14
+                            color: "#737373"
+                        }
+                        
+                        MouseArea {
+                            id: closeBtn
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: commandDialog.reject()
+                        }
+                    }
                 }
-                visible: !commandDialog.folderMode
+                
+                // 分隔线
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: "#e5e5e5"
+                }
+            }
+            
+            // 表单内容
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.margins: 24
+                spacing: 20
+                
+                // 标题输入（命令模式）
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: !commandDialog.folderMode
+                    
+                    Text {
+                        text: "命令名称"
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                        color: "#525252"
+                    }
+                    
+                    TextField {
+                        id: titleFieldCmd
+                        placeholderText: "例如：查看系统日志"
+                        Layout.fillWidth: true
+                        font.pixelSize: 14
+                        leftPadding: 14
+                        rightPadding: 14
+                        topPadding: 12
+                        bottomPadding: 12
+                        
+                        background: Rectangle {
+                            color: titleFieldCmd.activeFocus ? "#ffffff" : "#fafafa"
+                            border.color: titleFieldCmd.activeFocus ? "#171717" : "#e5e5e5"
+                            border.width: titleFieldCmd.activeFocus ? 2 : 1
+                            radius: 8
+                            
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on border.width { NumberAnimation { duration: 150 } }
+                        }
+                    }
+                }
+                
+                // 标题输入（分组模式）
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: commandDialog.folderMode
+                    
+                    Text {
+                        text: "分组名称"
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                        color: "#525252"
+                    }
+                    
+                    TextField {
+                        id: titleFieldFolder
+                        placeholderText: "例如：服务器运维"
+                        Layout.fillWidth: true
+                        font.pixelSize: 14
+                        leftPadding: 14
+                        rightPadding: 14
+                        topPadding: 12
+                        bottomPadding: 12
+                        
+                        background: Rectangle {
+                            color: titleFieldFolder.activeFocus ? "#ffffff" : "#fafafa"
+                            border.color: titleFieldFolder.activeFocus ? "#171717" : "#e5e5e5"
+                            border.width: titleFieldFolder.activeFocus ? 2 : 1
+                            radius: 8
+                            
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on border.width { NumberAnimation { duration: 150 } }
+                        }
+                    }
+                }
+                
+                // 命令内容
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: !commandDialog.folderMode
+                    
+                    Text {
+                        text: "命令内容"
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                        color: "#525252"
+                    }
+                    
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 100
+                        
+                        TextArea {
+                            id: commandField
+                            placeholderText: "例如：tail -f /var/log/syslog"
+                            font.pixelSize: 13
+                            font.family: "JetBrains Mono, Consolas, Monaco, monospace"
+                            wrapMode: TextArea.Wrap
+                            leftPadding: 14
+                            rightPadding: 14
+                            topPadding: 12
+                            bottomPadding: 12
+                            
+                            background: Rectangle {
+                                color: commandField.activeFocus ? "#1a1a1a" : "#262626"
+                                border.color: commandField.activeFocus ? "#404040" : "#333333"
+                                border.width: 1
+                                radius: 8
+                                
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on border.color { ColorAnimation { duration: 150 } }
+                            }
+                            
+                            color: "#10b981"  // 绿色代码风格
+                            selectionColor: "#065f46"
+                            selectedTextColor: "#ffffff"
+                        }
+                    }
+                }
+                
+                // 描述
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: !commandDialog.folderMode
+                    
+                    Text {
+                        text: "描述（可选）"
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                        color: "#525252"
+                    }
+                    
+                    TextField {
+                        id: descField
+                        placeholderText: "简要说明这条命令的用途"
+                        Layout.fillWidth: true
+                        font.pixelSize: 14
+                        leftPadding: 14
+                        rightPadding: 14
+                        topPadding: 12
+                        bottomPadding: 12
+                        
+                        background: Rectangle {
+                            color: descField.activeFocus ? "#ffffff" : "#fafafa"
+                            border.color: descField.activeFocus ? "#171717" : "#e5e5e5"
+                            border.width: descField.activeFocus ? 2 : 1
+                            radius: 8
+                            
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                            Behavior on border.width { NumberAnimation { duration: 150 } }
+                        }
+                    }
+                }
+                
+                // 分组选择
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: !commandDialog.folderMode
+                    
+                    Text {
+                        text: "所属分组"
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                        color: "#525252"
+                    }
+                    
+                    ComboBox {
+                        id: groupField
+                        editable: true
+                        model: commandDialog.model ? commandDialog.model.groups : []
+                        Layout.fillWidth: true
+                        font.pixelSize: 14
+                        
+                        background: Rectangle {
+                            color: groupField.pressed ? "#f5f5f5" : "#fafafa"
+                            border.color: groupField.activeFocus ? "#171717" : "#e5e5e5"
+                            border.width: groupField.activeFocus ? 2 : 1
+                            radius: 8
+                            
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+                        }
+                        
+                        contentItem: Text {
+                            leftPadding: 14
+                            rightPadding: groupField.indicator.width + 14
+                            text: groupField.editText || groupField.displayText || "选择或输入分组名"
+                            font: groupField.font
+                            color: (groupField.editText || groupField.displayText) ? "#171717" : "#a3a3a3"
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+                        
+                        indicator: Text {
+                            x: groupField.width - width - 14
+                            y: (groupField.height - height) / 2
+                            text: "▼"
+                            font.pixelSize: 10
+                            color: "#737373"
+                        }
+                    }
+                }
+            }
+            
+            // 底部按钮区
+            Rectangle {
+                Layout.fillWidth: true
+                height: 72
+                color: "#fafafa"
+                
+                // 顶部分隔线
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: "#e5e5e5"
+                }
+                
+                RowLayout {
+                    anchors.centerIn: parent
+                    anchors.right: parent.right
+                    anchors.rightMargin: 24
+                    spacing: 12
+                    
+                    // 取消按钮
+                    Rectangle {
+                        width: 88
+                        height: 40
+                        radius: 8
+                        color: cancelBtn.containsMouse ? "#f5f5f5" : "#ffffff"
+                        border.color: "#e5e5e5"
+                        border.width: 1
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: "取消"
+                            font.pixelSize: 14
+                            font.weight: Font.Medium
+                            color: "#525252"
+                        }
+                        
+                        MouseArea {
+                            id: cancelBtn
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: commandDialog.reject()
+                        }
+                        
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                    
+                    // 确认按钮
+                    Rectangle {
+                        width: 88
+                        height: 40
+                        radius: 8
+                        color: confirmBtn.pressed ? "#000000" : (confirmBtn.containsMouse ? "#262626" : "#171717")
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: commandDialog.editIndex === -1 ? "创建" : "保存"
+                            font.pixelSize: 14
+                            font.weight: Font.Medium
+                            color: "#ffffff"
+                        }
+                        
+                        MouseArea {
+                            id: confirmBtn
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: commandDialog.accept()
+                        }
+                        
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                }
             }
         }
     }
