@@ -45,7 +45,158 @@ ApplicationWindow {
     }
     Item {
         states: State { name: "running" }
-    } 
+    }
+    
+    // 添加标准菜单栏（参考流行软件样式）
+    menuBar: MenuBar {
+        background: Rectangle {
+            color: "#f7f7f7"
+            
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 1
+                color: subtleBorder
+            }
+        }
+        
+        delegate: MenuBarItem {
+            id: menuBarItem
+            
+            contentItem: Text {
+                text: menuBarItem.text
+                font.pixelSize: 13
+                color: menuBarItem.highlighted ? textPrimary : textSecondary
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: 12
+                rightPadding: 12
+                
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
+            }
+            
+            background: Rectangle {
+                color: menuBarItem.highlighted ? "#e5e5e5" : "transparent"
+                
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
+            }
+        }
+        
+        Menu {
+            title: "&File"
+            
+            MenuItem {
+                text: "新建命令\tCtrl+N"
+                onTriggered: {
+                    if (commandDialog && typeof commandDialog.openForAdd === 'function') {
+                        commandDialog.openForAdd()
+                    }
+                }
+            }
+            MenuItem {
+                text: "新建分组\tCtrl+Shift+N"
+                onTriggered: {
+                    if (commandDialog && typeof commandDialog.openForAddFolder === 'function') {
+                        commandDialog.openForAddFolder()
+                    }
+                }
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "导入...\tCtrl+O"
+                onTriggered: importDialog.open()
+            }
+            MenuItem {
+                text: "导出...\tCtrl+S"
+                onTriggered: exportDialog.open()
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "退出\tCtrl+Q"
+                onTriggered: Qt.quit()
+            }
+        }
+        
+        Menu {
+            title: "&Edit"
+            
+            MenuItem {
+                text: "查找\tCtrl+F"
+                onTriggered: appHeader.searchField.forceActiveFocus()
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "偏好设置..."
+                enabled: false
+                onTriggered: {
+                    // TODO: 打开设置对话框
+                }
+            }
+        }
+        
+        Menu {
+            title: "&View"
+            
+            MenuItem {
+                text: "刷新\tF5"
+                onTriggered: {
+                    if (commandManager) {
+                        commandManager.initialize()
+                    }
+                }
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "展开所有分组"
+                enabled: false
+                onTriggered: {
+                    // TODO: 实现展开所有
+                }
+            }
+            MenuItem {
+                text: "折叠所有分组"
+                enabled: false
+                onTriggered: {
+                    // TODO: 实现折叠所有
+                }
+            }
+        }
+        
+        Menu {
+            title: "&Help"
+            
+            MenuItem {
+                text: "关于 CMD BOX"
+                onTriggered: {
+                    // TODO: 显示关于对话框
+                    if (copyNotification) {
+                        copyNotification.text = "CMD BOX v1.0 - 命令管理工具"
+                        copyNotification.open()
+                    }
+                }
+            }
+            MenuItem {
+                text: "检查更新..."
+                enabled: false
+                onTriggered: {
+                    // TODO: 检查更新
+                }
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "文档"
+                enabled: false
+                onTriggered: {
+                    // TODO: 打开文档
+                }
+            }
+        }
+    }
     
     header: ToolBar {
         id: appHeader
@@ -236,7 +387,8 @@ ApplicationWindow {
 
             background: Rectangle {
                 color: cardColor
-                border.color: parent.hovered ? primary : subtleBorder
+                // 移除 folder 的悬停效果，保持固定边框
+                border.color: subtleBorder
                 border.width: 1
                 radius: 6 // Sharper corners
             }
@@ -338,10 +490,18 @@ ApplicationWindow {
                         width: nested.width
                         height: innerCol.implicitHeight + 12
                         background: Rectangle {
-                            color: cardColor
-                            border.color: subtleBorder
+                            color: parent.hovered ? "#f5f5f5" : cardColor
+                            // 为 command 添加悬停效果
+                            border.color: parent.hovered ? primary : subtleBorder
                             border.width: 1
                             radius: 4
+                            
+                            Behavior on color {
+                                ColorAnimation { duration: 150 }
+                            }
+                            Behavior on border.color {
+                                ColorAnimation { duration: 150 }
+                            }
                         }
                         ColumnLayout {
                             id: innerCol
