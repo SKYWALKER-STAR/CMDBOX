@@ -5,9 +5,12 @@ import QtQuick.Dialogs
 //import "commandManager"
 
 ApplicationWindow {
+    id: appWindow
     visible: true
-    width: 800
-    height: 600
+    width: 1000
+    height: 650
+    minimumWidth: 700
+    minimumHeight: 400
     title: "CMD BOX"
 
     // 全局主题变量（经典黑白 - 现代极简）
@@ -19,7 +22,12 @@ ApplicationWindow {
     property color accent: "#525252"       // 中灰
     property color textPrimary: "#0a0a0a"  // 墨黑
     property color textSecondary: "#737373" // 深灰
+    property color menuHoverColor: "#f5f5f5" // 菜单悬停色
     property string uiFont: "Segoe UI, Roboto, Noto Sans, Arial"
+    
+    // 侧边栏控制
+    property bool sidebarVisible: true
+    property real sidebarWidth: 240
 
     font.family: uiFont
 
@@ -45,6 +53,481 @@ ApplicationWindow {
     }
     Item {
         states: State { name: "running" }
+    }
+    
+    // 现代化扁平菜单栏
+    menuBar: MenuBar {
+        id: mainMenuBar
+        
+        background: Rectangle {
+            color: bgColor
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 1
+                color: subtleBorder
+            }
+        }
+        
+        delegate: MenuBarItem {
+            id: menuBarItem
+            
+            contentItem: Text {
+                text: menuBarItem.text
+                font.pixelSize: 13
+                font.family: uiFont
+                color: menuBarItem.highlighted ? primaryDark : textSecondary
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+            
+            background: Rectangle {
+                implicitWidth: 40
+                implicitHeight: 32
+                color: menuBarItem.highlighted ? menuHoverColor : "transparent"
+                radius: 4
+            }
+        }
+        
+        // 文件菜单
+        Menu {
+            id: fileMenu
+            title: qsTr("文件")
+            
+            background: Rectangle {
+                implicitWidth: 220
+                implicitHeight: fileMenu.contentHeight + 16
+                color: "#ffffff"
+                border.color: subtleBorder
+                border.width: 1
+                radius: 8
+                opacity: 1
+            }
+            
+            delegate: MenuItem {
+                id: fileMenuItem
+                implicitWidth: 200
+                implicitHeight: 36
+                
+                contentItem: RowLayout {
+                    spacing: 12
+                    
+                    Text {
+                        text: fileMenuItem.text
+                        font.pixelSize: 13
+                        font.family: uiFont
+                        color: fileMenuItem.enabled ? textPrimary : textSecondary
+                        Layout.fillWidth: true
+                    }
+                    
+                    Text {
+                        text: {
+                            if (fileMenuItem.action && fileMenuItem.action.shortcut)
+                                return fileMenuItem.action.shortcut
+                            return ""
+                        }
+                        font.pixelSize: 11
+                        font.family: uiFont
+                        color: textSecondary
+                        visible: text !== ""
+                    }
+                }
+                
+                background: Rectangle {
+                    color: fileMenuItem.highlighted ? menuHoverColor : "transparent"
+                    radius: 4
+                    anchors.margins: 4
+                }
+            }
+            
+            Action {
+                text: qsTr("新建命令")
+                shortcut: "Ctrl+N"
+                onTriggered: commandDialog.openForAdd()
+            }
+            
+            Action {
+                text: qsTr("新建分组")
+                shortcut: "Ctrl+Shift+N"
+                onTriggered: commandDialog.openForAddFolder()
+            }
+            
+            MenuSeparator {
+                contentItem: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: 1
+                    color: subtleBorder
+                }
+            }
+            
+            Action {
+                text: qsTr("导入数据...")
+                shortcut: "Ctrl+I"
+                onTriggered: importDialog.open()
+            }
+            
+            Action {
+                text: qsTr("导出数据...")
+                shortcut: "Ctrl+E"
+                onTriggered: exportDialog.open()
+            }
+            
+            MenuSeparator {
+                contentItem: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: 1
+                    color: subtleBorder
+                }
+            }
+            
+            Action {
+                text: qsTr("退出")
+                shortcut: "Ctrl+Q"
+                onTriggered: Qt.quit()
+            }
+        }
+        
+        // 编辑菜单
+        Menu {
+            id: editMenu
+            title: qsTr("编辑")
+            
+            background: Rectangle {
+                implicitWidth: 220
+                implicitHeight: editMenu.contentHeight + 16
+                color: "#ffffff"
+                border.color: subtleBorder
+                border.width: 1
+                radius: 8
+                opacity: 1
+            }
+            
+            delegate: MenuItem {
+                id: editMenuItem
+                implicitWidth: 200
+                implicitHeight: 36
+                
+                contentItem: RowLayout {
+                    spacing: 12
+                    
+                    Text {
+                        text: editMenuItem.text
+                        font.pixelSize: 13
+                        font.family: uiFont
+                        color: editMenuItem.enabled ? textPrimary : textSecondary
+                        Layout.fillWidth: true
+                    }
+                    
+                    Text {
+                        text: {
+                            if (editMenuItem.action && editMenuItem.action.shortcut)
+                                return editMenuItem.action.shortcut
+                            return ""
+                        }
+                        font.pixelSize: 11
+                        font.family: uiFont
+                        color: textSecondary
+                        visible: text !== ""
+                    }
+                }
+                
+                background: Rectangle {
+                    color: editMenuItem.highlighted ? menuHoverColor : "transparent"
+                    radius: 4
+                    anchors.margins: 4
+                }
+            }
+            
+            Action {
+                text: qsTr("搜索")
+                shortcut: "Ctrl+F"
+                onTriggered: appHeader.searchField.forceActiveFocus()
+            }
+            
+            MenuSeparator {
+                contentItem: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: 1
+                    color: subtleBorder
+                }
+            }
+            
+            Action {
+                text: qsTr("刷新列表")
+                shortcut: "F5"
+                onTriggered: {
+                    if (commandManager) {
+                        commandManager.setFilter("")
+                        appHeader.searchField.text = ""
+                    }
+                }
+            }
+        }
+        
+        // 视图菜单
+        Menu {
+            id: viewMenu
+            title: qsTr("视图")
+            
+            background: Rectangle {
+                implicitWidth: 220
+                implicitHeight: viewMenu.contentHeight + 16
+                color: "#ffffff"
+                border.color: subtleBorder
+                border.width: 1
+                radius: 8
+                opacity: 1
+            }
+            
+            delegate: MenuItem {
+                id: viewMenuItem
+                implicitWidth: 200
+                implicitHeight: 36
+                
+                contentItem: RowLayout {
+                    spacing: 12
+                    
+                    Text {
+                        text: viewMenuItem.text
+                        font.pixelSize: 13
+                        font.family: uiFont
+                        color: viewMenuItem.enabled ? textPrimary : textSecondary
+                        Layout.fillWidth: true
+                    }
+                    
+                    Text {
+                        text: {
+                            if (viewMenuItem.action && viewMenuItem.action.shortcut)
+                                return viewMenuItem.action.shortcut
+                            return ""
+                        }
+                        font.pixelSize: 11
+                        font.family: uiFont
+                        color: textSecondary
+                        visible: text !== ""
+                    }
+                    
+                    // 复选标记
+                    Text {
+                        text: viewMenuItem.checkable && viewMenuItem.checked ? "✓" : ""
+                        font.pixelSize: 12
+                        color: primary
+                        visible: viewMenuItem.checkable
+                    }
+                }
+                
+                background: Rectangle {
+                    color: viewMenuItem.highlighted ? menuHoverColor : "transparent"
+                    radius: 4
+                    anchors.margins: 4
+                }
+            }
+            
+            Action {
+                text: qsTr("显示侧边栏")
+                shortcut: "Ctrl+B"
+                checkable: true
+                checked: sidebarVisible
+                onTriggered: sidebarVisible = !sidebarVisible
+            }
+            
+            MenuSeparator {
+                contentItem: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: 1
+                    color: subtleBorder
+                }
+            }
+            
+            Action {
+                text: qsTr("展开所有分组")
+                onTriggered: {
+                    if (sidebarTree) {
+                        // 触发侧边栏展开所有
+                    }
+                }
+            }
+            
+            Action {
+                text: qsTr("收起所有分组")
+                onTriggered: {
+                    if (sidebarTree) {
+                        // 触发侧边栏收起所有
+                    }
+                }
+            }
+        }
+        
+        // 帮助菜单
+        Menu {
+            id: helpMenu
+            title: qsTr("帮助")
+            
+            background: Rectangle {
+                implicitWidth: 220
+                implicitHeight: helpMenu.contentHeight + 16
+                color: "#ffffff"
+                border.color: subtleBorder
+                border.width: 1
+                radius: 8
+                opacity: 1
+            }
+            
+            delegate: MenuItem {
+                id: helpMenuItem
+                implicitWidth: 200
+                implicitHeight: 36
+                
+                contentItem: RowLayout {
+                    spacing: 12
+                    
+                    Text {
+                        text: helpMenuItem.text
+                        font.pixelSize: 13
+                        font.family: uiFont
+                        color: helpMenuItem.enabled ? textPrimary : textSecondary
+                        Layout.fillWidth: true
+                    }
+                }
+                
+                background: Rectangle {
+                    color: helpMenuItem.highlighted ? menuHoverColor : "transparent"
+                    radius: 4
+                    anchors.margins: 4
+                }
+            }
+            
+            Action {
+                text: qsTr("快捷键指南")
+                onTriggered: shortcutGuideDialog.open()
+            }
+            
+            MenuSeparator {
+                contentItem: Rectangle {
+                    implicitWidth: 200
+                    implicitHeight: 1
+                    color: subtleBorder
+                }
+            }
+            
+            Action {
+                text: qsTr("关于 CMD BOX")
+                onTriggered: aboutDialog.open()
+            }
+        }
+    }
+    
+    // 快捷键指南对话框
+    Dialog {
+        id: shortcutGuideDialog
+        title: "快捷键指南"
+        modal: true
+        anchors.centerIn: parent
+        width: 400
+        standardButtons: Dialog.Ok
+        
+        background: Rectangle {
+            color: cardColor
+            border.color: subtleBorder
+            radius: 12
+        }
+        
+        contentItem: ColumnLayout {
+            spacing: 12
+            
+            Label {
+                text: "常用快捷键"
+                font.bold: true
+                font.pixelSize: 16
+                color: textPrimary
+            }
+            
+            GridLayout {
+                columns: 2
+                columnSpacing: 24
+                rowSpacing: 8
+                
+                Label { text: "Ctrl+N"; font.family: "Courier New"; color: accent }
+                Label { text: "新建命令"; color: textPrimary }
+                
+                Label { text: "Ctrl+Shift+N"; font.family: "Courier New"; color: accent }
+                Label { text: "新建分组"; color: textPrimary }
+                
+                Label { text: "Ctrl+F"; font.family: "Courier New"; color: accent }
+                Label { text: "搜索"; color: textPrimary }
+                
+                Label { text: "Ctrl+I"; font.family: "Courier New"; color: accent }
+                Label { text: "导入数据"; color: textPrimary }
+                
+                Label { text: "Ctrl+E"; font.family: "Courier New"; color: accent }
+                Label { text: "导出数据"; color: textPrimary }
+                
+                Label { text: "Ctrl+B"; font.family: "Courier New"; color: accent }
+                Label { text: "切换侧边栏"; color: textPrimary }
+                
+                Label { text: "F5"; font.family: "Courier New"; color: accent }
+                Label { text: "刷新列表"; color: textPrimary }
+            }
+        }
+    }
+    
+    // 关于对话框
+    Dialog {
+        id: aboutDialog
+        title: "关于 CMD BOX"
+        modal: true
+        anchors.centerIn: parent
+        width: 360
+        standardButtons: Dialog.Ok
+        
+        background: Rectangle {
+            color: cardColor
+            border.color: subtleBorder
+            radius: 12
+        }
+        
+        contentItem: ColumnLayout {
+            spacing: 16
+            
+            Label {
+                text: "CMD BOX"
+                font.bold: true
+                font.pixelSize: 24
+                color: textPrimary
+                Layout.alignment: Qt.AlignHCenter
+            }
+            
+            Label {
+                text: "版本 1.0.0"
+                font.pixelSize: 13
+                color: textSecondary
+                Layout.alignment: Qt.AlignHCenter
+            }
+            
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: subtleBorder
+            }
+            
+            Label {
+                text: "快速管理你的常用命令\n一款现代化的命令管理工具"
+                font.pixelSize: 13
+                color: textSecondary
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+            
+            Label {
+                text: "© 2024-2026 OpsTools"
+                font.pixelSize: 11
+                color: textSecondary
+                Layout.alignment: Qt.AlignHCenter
+            }
+        }
     } 
     
     header: ToolBar {
@@ -79,6 +562,31 @@ ApplicationWindow {
                     font.pixelSize: 12
                     color: textSecondary
                 }
+            }
+
+            // 侧边栏切换按钮
+            ToolButton {
+                id: sidebarToggle
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                onClicked: sidebarVisible = !sidebarVisible
+                
+                background: Rectangle {
+                    radius: 6
+                    color: sidebarToggle.pressed ? "#f0f0f0" : (sidebarToggle.hovered ? "#f5f5f5" : "transparent")
+                }
+                
+                contentItem: Label {
+                    text: sidebarVisible ? "◀" : "▶"
+                    font.pixelSize: 12
+                    color: textSecondary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                ToolTip.visible: hovered
+                ToolTip.text: sidebarVisible ? "隐藏侧边栏" : "显示侧边栏"
+                ToolTip.delay: 500
             }
 
             TextField {
@@ -147,63 +655,61 @@ ApplicationWindow {
         }
     }
 
-    contentData: ListView {
-        id: listView
+    contentData: RowLayout {
         anchors.fill: parent
-        model: commandManager
-        clip: true
-        spacing: 2  // 减小间距，让 folder 紧密排列
-        signal addFolderRequested()
-        signal addCommandRequested()
+        spacing: 0
         
-        footer: Item {
-            width: listView.width
-            height: 78
-            z: 2
-
-            ToolButton {
-                id: addButton
-                anchors.centerIn: parent
-                text: "+"
-                font.pixelSize: 22
-                width: 56
-                height: 56
-                onClicked: addMenu.open()
-                background: Rectangle {
-                    color: addButton.pressed ? primaryDark : primary
-                    radius: 28
+        // 左侧边栏
+        SidebarTreeView {
+            id: sidebarTree
+            Layout.preferredWidth: sidebarVisible ? sidebarWidth : 0
+            Layout.fillHeight: true
+            visible: sidebarVisible
+            
+            // 传递主题变量
+            bgColor: appWindow.bgColor
+            cardColor: appWindow.cardColor
+            subtleBorder: appWindow.subtleBorder
+            primary: appWindow.primary
+            primaryDark: appWindow.primaryDark
+            accent: appWindow.accent
+            textPrimary: appWindow.textPrimary
+            textSecondary: appWindow.textSecondary
+            
+            commandManager: commandManager
+            
+            onGroupSelected: function(groupName) {
+                // 可选：按分组筛选
+                if (commandManager) {
+                    commandManager.setGroupFilter(groupName)
                 }
-                contentItem: Label { text: addButton.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                scale: addButton.pressed ? 0.9 : 1.0
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
             }
-            Menu {
-                id: addMenu
-                z: 3
-                x: addButton.x
-                y: addButton.y + addButton.height + 6
-                MenuItem {
-                    text: "Add Folder"
-                    onTriggered: {
-                        if (commandDialog && typeof commandDialog.openForAddFolder === 'function') {
-                            commandDialog.openForAddFolder()
-                        } else {
-                            addFolderRequested()
-                        }
-                    }
+            
+            onItemClicked: function(index, isFolder) {
+                if (!isFolder) {
+                    // 命令被点击，显示复制提示
+                    copyNotification.text = "已复制命令"
+                    copyNotification.open()
                 }
-                MenuItem {
-                    text: "Add Command"
-                    onTriggered: {
-                        if (commandDialog && typeof commandDialog.openForAdd === 'function') {
-                            commandDialog.openForAdd()
-                        } else {
-                            addCommandRequested()
-                        }
-                    }
-                }
+            }
+            
+            // 展开/收起动画
+            Behavior on Layout.preferredWidth {
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
         }
+        
+        // 主内容区域
+        ListView {
+            id: listView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            model: commandManager
+            clip: true
+            spacing: 2  // 减小间距，让 folder 紧密排列
+            signal addFolderRequested()
+            signal addCommandRequested()
+        
         onAddFolderRequested: {
             if (commandDialog && typeof commandDialog.openForAddFolder === 'function') {
                 commandDialog.openForAddFolder()
@@ -421,7 +927,8 @@ ApplicationWindow {
                 }
             }
         }
-    }
+    }  // 关闭 ListView
+    }  // 关闭 RowLayout (contentData)
     Dialog {
         id: commandDialog
         property var model
