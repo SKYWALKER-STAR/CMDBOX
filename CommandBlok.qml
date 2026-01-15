@@ -3,12 +3,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Popup {
+//Dialog {
     id: preview
     modal: true
     focus: true
     padding: 0
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    anchors.centerIn: parent
+    //anchors.centerIn: parent
     width: Math.min(parent ? parent.width * 0.9 : 800, 800)
     height: Math.min(parent ? parent.height * 0.8 : 500, 500)
 

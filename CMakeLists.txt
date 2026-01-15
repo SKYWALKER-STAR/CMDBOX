@@ -22,6 +22,8 @@ qt_add_qml_module(cmdbox
     CommandBlok.qml
     CButton.qml
     SidebarTreeView.qml
+    HeadManubarView.qml
+    ShortcutGuideDialog.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
