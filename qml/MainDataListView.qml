@@ -93,7 +93,7 @@ ListView {
             if (!CommandManager) return
             CommandManager.copyToClipboard(commandContent)
             if (copyNotification) {
-                copyNotification.text = "已复制: " + title
+                copyNotification.text = "已复制: " + commandContent
                 copyNotification.open()
             }
         }
@@ -203,6 +203,11 @@ ListView {
                 font.pixelSize: 12
                 visible: description !== ""
             }
+        }
+        //悬停动画
+        scale: hovered ? 1.01 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
         }
     }
 }  // 关闭 ListView

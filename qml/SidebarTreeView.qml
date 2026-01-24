@@ -25,7 +25,7 @@ Rectangle {
     
     // 信号
     signal groupSelected(string groupName)
-    signal itemClicked(int index, bool isFolder)
+    signal itemClicked(int index, bool isFolder, string cmd)
     
     // 当 commandManager 变化时刷新
     onCommandManagerChanged: {
@@ -330,7 +330,7 @@ Rectangle {
                         // 点击命令项，触发复制
                         if (commandManager && modelData.command) {
                             commandManager.copyToClipboard(modelData.command)
-                            itemClicked(modelData.index, false)
+                            itemClicked(modelData.index, false, modelData.command)
                         }
                     }
                 }

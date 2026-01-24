@@ -104,10 +104,10 @@ ApplicationWindow {
                 mainDataListView.selectedGroup = groupName
             }
             
-            onItemClicked: function(index, isFolder) {
+            onItemClicked: function(index, isFolder, cmd) {
                 if (!isFolder) {
                     // 命令被点击，显示复制提示
-                    copyNotificationView.text = "已复制命令"
+                    copyNotificationView.text = "已复制: " + cmd
                     copyNotificationView.open()
                 }
             }

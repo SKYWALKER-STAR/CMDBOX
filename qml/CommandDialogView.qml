@@ -269,6 +269,7 @@ Dialog {
                     TextArea {
                         id: commandField
                         placeholderText: "例如：tail -f /var/log/syslog"
+                        placeholderTextColor: "#ffffff"
                         font.pixelSize: 12
                         font.family: "JetBrains Mono, Consolas, Monaco, monospace"
                         wrapMode: TextArea.Wrap
@@ -432,7 +433,7 @@ Dialog {
                 Rectangle {
                     width: 72
                     height: 34
-                    radius: 6
+                    radius: 0
                     color: confirmBtn.pressed ? "#000000" : (confirmBtn.containsMouse ? "#262626" : "#171717")
                     
                     Text {
