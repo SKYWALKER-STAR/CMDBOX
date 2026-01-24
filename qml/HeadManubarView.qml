@@ -4,6 +4,8 @@ import QtQuick.Layouts
 
 MenuBar {
         id: headMenuBar
+        // 数据模型
+        property var commandManager: null
         
         background: Rectangle {
             color: bgColor
@@ -81,13 +83,13 @@ MenuBar {
             Action {
                 text: qsTr("新建命令")
                 shortcut: "Ctrl+N"
-                onTriggered: commandDialog.openForAdd()
+                onTriggered: commandDialogView.openForAdd()
             }
             
             Action {
                 text: qsTr("新建分组")
                 shortcut: "Ctrl+Shift+N"
-                onTriggered: commandDialog.openForAddFolder()
+                onTriggered: commandDialogView.openForAddFolder()
             }
             
             MenuSeparator {
@@ -101,13 +103,13 @@ MenuBar {
             Action {
                 text: qsTr("导入数据...")
                 shortcut: "Ctrl+I"
-                onTriggered: importDialog.open()
+                onTriggered: importDialogView.open()
             }
             
             Action {
                 text: qsTr("导出数据...")
                 shortcut: "Ctrl+E"
-                onTriggered: exportDialog.open()
+                onTriggered: exportDialogView.open()
             }
             
             MenuSeparator {

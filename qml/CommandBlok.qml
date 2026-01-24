@@ -48,7 +48,7 @@ Popup {
             spacing: 8
             Button {
                 text: "复制"
-                onClicked: if (typeof commandManager !== "undefined") commandManager.copyToClipboard(cmdArea.text)
+                onClicked: if (typeof CommandManager !== "undefined") CommandManager.copyToClipboard(cmdArea.text)
             }
             Button { text: "关闭"; onClicked: preview.close() }
         }

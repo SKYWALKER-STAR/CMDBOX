@@ -56,7 +56,8 @@ ApplicationWindow {
     
     // 现代化扁平菜单栏
     menuBar: HeadManubarView {
-        id: mainMenuBar
+        id: headMenuBarView
+        commandManager: CommandManager
     }
 
     // 快捷键指南
@@ -99,17 +100,15 @@ ApplicationWindow {
             commandManager: CommandManager
             
             onGroupSelected: function(groupName) {
-                // 可选：按分组筛选
-                if (commandManager) {
-                    commandManager.setGroupFilter(groupName)
-                }
+                // 设置选中的分组
+                mainDataListView.selectedGroup = groupName
             }
             
             onItemClicked: function(index, isFolder) {
                 if (!isFolder) {
                     // 命令被点击，显示复制提示
-                    copyNotification.text = "已复制命令"
-                    copyNotification.open()
+                    copyNotificationView.text = "已复制命令"
+                    copyNotificationView.open()
                 }
             }
             
@@ -119,8 +118,8 @@ ApplicationWindow {
             }
 
             onCommandManagerChanged: {
-                console.log("SidebarTreeView: commandManager changed:", commandManager)
-                if (commandManager) {
+                console.log("SidebarTreeView: commandManager changed:", CommandManager)
+                if (CommandManager) {
                     console.log("CommandManager is valid")
                     treeList.model = treeList.buildTreeModel()
                 } else {
@@ -131,6 +130,9 @@ ApplicationWindow {
         // 主内容区域
         MainDataListView {
             id: mainDataListView
+            commandDialog: commandDialogView
+            copyNotification: copyNotificationView
+            previewWin: previewWin
         }
     }  // 关闭 RowLayout (contentData)
 

@@ -41,8 +41,8 @@ ToolBar {
             verticalAlignment: Text.AlignVCenter
             leftPadding: 10
             onTextChanged: {
-                if (commandManager)
-                    commandManager.setFilter(text)
+                if (CommandManager)
+                    CommandManager.setFilter(text)
                     console.log("Hello world from onTextChanged")
             }
             background: Rectangle {

@@ -76,7 +76,7 @@ ToolBar {
             font.pixelSize: 14
             onTextChanged: {
                 if (CommandManager) 
-                    CmmandManager.setFilter(text)
+                    CommandManager.setFilter(text)
             }
             background: Rectangle {
                 color: "#f5f5f5" // Slight gray for input area
