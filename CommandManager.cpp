@@ -185,6 +185,80 @@ void CommandManager::removeCommand(int index)
     emit groupsChanged();
 }
 
+void CommandManager::renameFolder(const QString &oldTitle, const QString &newTitle)
+{
+    if (!m_initialized) {
+        initialize();
+    }
+
+    const QString oldName = oldTitle.trimmed();
+    const QString newName = newTitle.trimmed();
+
+    if (oldName.isEmpty() || newName.isEmpty() || oldName == QStringLiteral("All") || oldName == newName)
+        return;
+
+    bool changed = false;
+    for (auto &entry : m_allCommands) {
+        if (entry.isFolder && entry.title == oldName) {
+            entry.title = newName;
+            changed = true;
+        }
+        if (!entry.isFolder && entry.group == oldName) {
+            entry.group = newName;
+            changed = true;
+        }
+        if (entry.isFolder && entry.group == oldName) {
+            entry.group = newName;
+            changed = true;
+        }
+    }
+
+    if (!changed)
+        return;
+
+    saveCommands();
+    updateFilteredCommands();
+    emit groupsChanged();
+}
+
+void CommandManager::removeFolder(const QString &folderTitle, bool deleteCommands)
+{
+    if (!m_initialized) {
+        initialize();
+    }
+
+    const QString folderName = folderTitle.trimmed();
+    if (folderName.isEmpty() || folderName == QStringLiteral("All"))
+        return;
+
+    bool changed = false;
+    for (int i = m_allCommands.count() - 1; i >= 0; --i) {
+        const auto &entry = m_allCommands[i];
+
+        if (entry.isFolder && entry.title == folderName) {
+            m_allCommands.removeAt(i);
+            changed = true;
+            continue;
+        }
+
+        if (!entry.isFolder && entry.group == folderName) {
+            if (deleteCommands) {
+                m_allCommands.removeAt(i);
+            } else {
+                m_allCommands[i].group = QStringLiteral("All");
+            }
+            changed = true;
+        }
+    }
+
+    if (!changed)
+        return;
+
+    saveCommands();
+    updateFilteredCommands();
+    emit groupsChanged();
+}
+
 void CommandManager::copyToClipboard(const QString &text)
 {
     QClipboard *clipboard = QGuiApplication::clipboard();

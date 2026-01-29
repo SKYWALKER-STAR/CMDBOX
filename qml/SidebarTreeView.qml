@@ -22,10 +22,130 @@ Rectangle {
     
     // 数据模型
     property var commandManager: null
+
+    // 外部依赖（可选）
+    property var commandDialog: null
+    property var previewWin: null
     
     // 信号
     signal groupSelected(string groupName)
     signal itemClicked(int index, bool isFolder, string cmd)
+
+
+    ContextMenuView {
+        id: contextMenuView
+        defaultGroupName: sidebar.selectedGroup
+
+        onAddCommandRequested: function(groupName) {
+            if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAddInGroup === 'function') {
+                sidebar.commandDialog.openForAddInGroup(groupName)
+            } else if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAdd === 'function') {
+                sidebar.commandDialog.openForAdd()
+            }
+        }
+        onAddFolderRequested: function() {
+            if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAddFolder === 'function') {
+                sidebar.commandDialog.openForAddFolder()
+            }
+        }
+        onViewRequested: function(item) {
+            if (!item) return
+            if (item.isFolder) {
+                sidebar.selectedGroup = item.name
+                sidebar.groupSelected(item.name)
+                return
+            }
+            if (sidebar.previewWin && typeof sidebar.previewWin.openWith === 'function') {
+                sidebar.previewWin.openWith(item.name, item.command)
+            } else if (sidebar.commandManager && item.command) {
+                sidebar.commandManager.copyToClipboard(item.command)
+                sidebar.itemClicked(item.index, false, item.command)
+            }
+        }
+        onEditRequested: function(item) {
+            if (!item) return
+            if (item.isFolder) {
+                folderRenameDialog.oldName = item.name
+                folderRenameField.text = item.name
+                folderRenameDialog.open()
+                return
+            }
+            if (sidebar.commandDialog && typeof sidebar.commandDialog.openForEdit === 'function') {
+                sidebar.commandDialog.openForEdit(item.index, item.name, item.command, item.description || "", item.parentGroup || "", false)
+            }
+        }
+        onDeleteRequested: function(item) {
+            if (!item) return
+            if (item.isFolder) {
+                folderDeleteDialog.folderName = item.name
+                folderDeleteDialog.open()
+                return
+            }
+            if (sidebar.commandManager && typeof sidebar.commandManager.removeCommand === 'function') {
+                sidebar.commandManager.removeCommand(item.index)
+            }
+        }
+    }
+
+
+    Dialog {
+        id: folderRenameDialog
+        title: "重命名分组"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        property string oldName: ""
+
+        contentItem: ColumnLayout {
+            spacing: 10
+            Label {
+                text: "新名称"
+                font.pixelSize: 12
+                color: sidebar.textSecondary
+            }
+
+            TextField {
+                id: folderRenameField
+                Layout.fillWidth: true
+                placeholderText: "请输入分组名称"
+            }
+        }
+
+        onAccepted: {
+            if (!sidebar.commandManager || typeof sidebar.commandManager.renameFolder !== 'function') return
+            sidebar.commandManager.renameFolder(oldName, folderRenameField.text)
+        }
+    }
+
+    Dialog {
+        id: folderDeleteDialog
+        title: "删除分组"
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        property string folderName: ""
+
+        contentItem: ColumnLayout {
+            spacing: 8
+            Label {
+                text: "确定删除分组 \"" + folderDeleteDialog.folderName + "\" ？"
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+            Label {
+                text: "该分组下的命令将移动到 All。"
+                color: sidebar.textSecondary
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+
+        onAccepted: {
+            if (!sidebar.commandManager || typeof sidebar.commandManager.removeFolder !== 'function') return
+            sidebar.commandManager.removeFolder(folderName, false)
+        }
+    }
     
     // 当 commandManager 变化时刷新
     onCommandManagerChanged: {
@@ -97,6 +217,24 @@ Rectangle {
             spacing: 2
             
             model: []  // 初始为空，等待 commandManager 加载
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.RightButton
+                propagateComposedEvents: true
+                onPressed: function(mouse) {
+                    if (mouse.button !== Qt.RightButton) return
+                    var idx = treeList.indexAt(mouse.x, mouse.y)
+                    if (idx !== -1) {
+                        mouse.accepted = false
+                        return
+                    }
+
+                    var p = treeList.mapToItem(null, mouse.x, mouse.y)
+                    contextMenuView.openFor(null, p.x, p.y)
+                    mouse.accepted = true
+                }
+            }
             
             Component.onCompleted: {
                 console.log("SidebarTreeView ListView completed")
@@ -186,7 +324,8 @@ Rectangle {
                             childCount: 0,
                             parentGroup: groupName,
                             index: cmd.sourceIndex,
-                            command: cmd.commandContent
+                            command: cmd.commandContent,
+                            description: cmd.description || ""
                         })
                     }
                 }
@@ -331,6 +470,18 @@ Rectangle {
                             commandManager.copyToClipboard(modelData.command)
                             itemClicked(modelData.index, false, modelData.command)
                         }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    propagateComposedEvents: true
+                    onPressed: function(mouse) {
+                        if (mouse.button !== Qt.RightButton) return
+                        var p = treeItem.mapToItem(null, mouse.x, mouse.y)
+                        contextMenuView.openFor(modelData, p.x, p.y)
+                        mouse.accepted = true
                     }
                 }
                 

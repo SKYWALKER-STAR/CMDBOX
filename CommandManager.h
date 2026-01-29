@@ -38,6 +38,8 @@ public:
     Q_INVOKABLE void editCommand(int index, const QString &title, const QString &command, const QString &description, const QString &group = QString());
     Q_INVOKABLE void editFolder(int index, const QString &title, const QString &group = QString());
     Q_INVOKABLE void removeCommand(int index);
+    Q_INVOKABLE void renameFolder(const QString &oldTitle, const QString &newTitle);
+    Q_INVOKABLE void removeFolder(const QString &folderTitle, bool deleteCommands = false);
     Q_INVOKABLE void copyToClipboard(const QString &text);
     Q_INVOKABLE void setFilter(const QString &filterText);
     Q_INVOKABLE void setGroupFilter(const QString &group);

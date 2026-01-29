@@ -98,6 +98,8 @@ ApplicationWindow {
             textSecondary: appWindow.textSecondary
             
             commandManager: CommandManager
+            commandDialog: commandDialogView
+            previewWin: previewWin
             
             onGroupSelected: function(groupName) {
                 // 设置选中的分组
@@ -135,7 +137,6 @@ ApplicationWindow {
             previewWin: previewWin
         }
     }  // 关闭 RowLayout (contentData)
-
     CommandDialogView {
         id: commandDialogView
     }

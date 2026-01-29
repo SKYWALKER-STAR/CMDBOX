@@ -53,6 +53,13 @@ Window {
         commandDialog.requestActivate()
     }
 
+    function openForAddInGroup(groupName) {
+        openForAdd()
+        if (groupField) {
+            groupField.editText = (typeof groupName !== 'undefined') ? (groupName || "") : ""
+        }
+    }
+
     function openForAddFolder() {
         editIndex = -1
         folderMode = true
