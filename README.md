@@ -1,6 +1,6 @@
 <div align="center">
 <div style="margin: 20px 0;">
-  <img src="https://github.com/SKYWALKER-STAR/StickyNotes/blob/main/Logo.svg">
+  <img src="https://skywalker-star.github.io/icon/stickynotes.ico">
 </div>
 
 # Sticky Notes
