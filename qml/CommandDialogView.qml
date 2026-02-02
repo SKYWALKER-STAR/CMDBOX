@@ -21,8 +21,8 @@ Window {
     // 窗口尺寸
     width: 480
     minimumWidth: 400
-    minimumHeight: 300
-    height: folderMode ? 300 : 520
+    minimumHeight: 240
+    height: 420
     
     //color: "#ffffff"
     
@@ -58,19 +58,6 @@ Window {
         if (groupField) {
             groupField.editText = (typeof groupName !== 'undefined') ? (groupName || "") : ""
         }
-    }
-
-    function openForAddFolder() {
-        editIndex = -1
-        folderMode = true
-        titleFieldFolder.text = ""
-        if (groupField) {
-            groupField.currentIndex = -1
-            groupField.editText = ""
-        }
-        commandDialog.show()
-        commandDialog.raise()
-        commandDialog.requestActivate()
     }
 
     function openForEdit(index, title, cmd, desc, group, isFolder) {

@@ -320,7 +320,7 @@ MenuBar {
             }
             
             Action {
-                text: qsTr("关于 CMD BOX")
+                text: qsTr("关于 Sticky Note")
                 onTriggered: aboutDialogView.open()
             }
         }

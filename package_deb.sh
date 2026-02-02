@@ -42,7 +42,7 @@ echo "-> 创建桌面快捷方式..."
 cat > "$DEB_DIR/usr/share/applications/$APP_NAME.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=CMD BOX
+Name=Sticky Note
 Comment=A quick command paste tool
 Exec=/opt/$APP_NAME/AppRun
 Icon=utilities-terminal

@@ -44,8 +44,8 @@ Rectangle {
             }
         }
         onAddFolderRequested: function() {
-            if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAddFolder === 'function') {
-                sidebar.commandDialog.openForAddFolder()
+            if (sidebar.groupDialog && typeof sidebar.groupDialog.openForAddFolder === 'function') {
+                sidebar.groupDialog.openForAddFolder()
             }
         }
         onViewRequested: function(item) {
@@ -230,7 +230,8 @@ Rectangle {
                         return
                     }
 
-                    var p = treeList.mapToItem(null, mouse.x, mouse.y)
+                    // Menu.popup(x,y) expects coordinates in its parent's coordinate space.
+                    var p = treeList.mapToItem(contextMenuView.parent, mouse.x, mouse.y)
                     contextMenuView.openFor(null, p.x, p.y)
                     mouse.accepted = true
                 }
@@ -262,10 +263,10 @@ Rectangle {
             Connections {
                 target: commandManager
                 function onCommandsChanged() {
-                    treeList.model = buildTreeModel()
+                    treeList.model = treeList.buildTreeModel()
                 }
                 function onGroupsChanged() {
-                    treeList.model = buildTreeModel()
+                    treeList.model = treeList.buildTreeModel()
                 }
             }
             
@@ -479,7 +480,8 @@ Rectangle {
                     propagateComposedEvents: true
                     onPressed: function(mouse) {
                         if (mouse.button !== Qt.RightButton) return
-                        var p = treeItem.mapToItem(null, mouse.x, mouse.y)
+                        // Menu.popup(x,y) expects coordinates in its parent's coordinate space.
+                        var p = treeItem.mapToItem(contextMenuView.parent, mouse.x, mouse.y)
                         contextMenuView.openFor(modelData, p.x, p.y)
                         mouse.accepted = true
                     }

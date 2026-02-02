@@ -27,7 +27,7 @@ ToolBar {
             Layout.preferredWidth: 220
             spacing: 2
             Label {
-                text: "CMD BOX"
+                text: "Sticky Note"
                 font.bold: true
                 font.pixelSize: 20
                 color: textPrimary

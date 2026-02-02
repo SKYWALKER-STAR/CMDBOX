@@ -8,7 +8,7 @@ find_package(Qt6 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(cmdbox
+qt_add_executable(snote
     main.cpp
     CommandManager.cpp
     CommandManager.h
@@ -19,7 +19,7 @@ file(GLOB QML_FILES_ALL
      RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
      "qml/*.qml")
 
-qt_add_qml_module(cmdbox
+qt_add_qml_module(snote
     URI cpaste_quick
     QML_FILES
     ${QML_FILES_ALL}
@@ -28,27 +28,27 @@ qt_add_qml_module(cmdbox
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(cmdbox PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.cmdbox
+set_target_properties(snote PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.snote
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(cmdbox
+target_link_libraries(snote
     PRIVATE Qt6::Quick
 )
 
 include(GNUInstallDirs)
-install(TARGETS cmdbox
+install(TARGETS snote
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 # Packaging Configuration
-set(CPACK_PACKAGE_NAME "cmdbox")
+set(CPACK_PACKAGE_NAME "snote")
 set(CPACK_PACKAGE_VENDOR "OpsTools")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A quick command paste tool for Ops engineers")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")

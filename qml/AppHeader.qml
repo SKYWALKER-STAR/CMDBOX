@@ -24,7 +24,7 @@ ToolBar {
         spacing: 15
 
         Label {
-            text: "CMD BOX"
+            text: "Sticky Node"
             font.bold: true
             font.pixelSize: 20
             Layout.alignment: Qt.AlignVCenter

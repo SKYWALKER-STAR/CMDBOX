@@ -5,7 +5,7 @@ import Qt.labs.qmlmodels
 
 Dialog {
     id: aboutDialog
-    title: "关于 CMD BOX"
+    title: "关于 Sticky Note"
     modal: true
     anchors.centerIn: parent
     width: 360
@@ -21,7 +21,7 @@ Dialog {
         spacing: 16
         
         Label {
-            text: "CMD BOX"
+            text: "Sticky Note"
             font.bold: true
             font.pixelSize: 24
             color: textPrimary

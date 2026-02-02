@@ -11,7 +11,7 @@ ApplicationWindow {
     height: 650
     minimumWidth: 700
     minimumHeight: 400
-    title: "CMD BOX"
+    title: "Sticky Note"
 
     // 全局主题变量（经典黑白 - 现代极简）
     property color bgColor: "#ffffff"      // 纯白背景
