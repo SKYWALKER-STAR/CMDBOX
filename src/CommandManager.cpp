@@ -1,4 +1,4 @@
-#include "CommandManager.h"
+#include "include/CommandManager.h"
 #include <QDebug>
 #include <QGuiApplication>
 #include <QClipboard>

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(cpaste_quick VERSION 0.1 LANGUAGES CXX)
+project(snote VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -9,9 +9,9 @@ find_package(Qt6 REQUIRED COMPONENTS Quick)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(snote
-    main.cpp
-    CommandManager.cpp
-    CommandManager.h
+    src/main.cpp
+    src/CommandManager.cpp
+    src/include/CommandManager.h
 )
 
 # 生成相对当前源目录的相对路径，如 qml/Foo.qml
@@ -20,7 +20,7 @@ file(GLOB QML_FILES_ALL
      "qml/*.qml")
 
 qt_add_qml_module(snote
-    URI cpaste_quick
+    URI snote 
     QML_FILES
     ${QML_FILES_ALL}
 )
@@ -34,6 +34,7 @@ set_target_properties(snote PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
 target_link_libraries(snote

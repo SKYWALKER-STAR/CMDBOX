@@ -4,7 +4,7 @@
 #include <QTimer>
 #include <QQmlEngine>
 #include <QDebug> // 引入 qDebug
-#include "CommandManager.h"
+#include "include/CommandManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     qDebug() << "Loading Main.qml...";
     
     //const QUrl url(QStringLiteral(u"qrc:/qt/qml/cpaste_quick/qml/Main.qml"));
-    engine.loadFromModule("cpaste_quick", "Main");
+    engine.loadFromModule("snote", "Main");
     //engine.loadFromModule("cpaste_quick", "qml/Main");
     //engine.load(url);
     if (engine.rootObjects().isEmpty()) {

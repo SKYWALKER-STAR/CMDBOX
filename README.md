@@ -40,6 +40,13 @@ Sticky Notes is a versatile and lightweight tool designed for organizing and man
 * **C++ compiler (GCC / Clang / MSVC / MinGW)**
 
 ### Linux
+> [!IMPORTANT]
+> If Qt is installed in a custom prefix (example `/user/local/QT/6.10.1/gcc_64`):
+```bash
+export QT_HOME=/path/to/qt
+export PATH=$QT_HOME/bin:$PATH
+cmake -DCMAKE_PREFIX_PATH=$QT_HOME ..
+```
 
 ```bash
 git clone git@github.com:SKYWALKER-STAR/StickyNotes.git sticky-notes
@@ -47,14 +54,7 @@ cd sticky-notes
 mkdir -p build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . -j
-./sticky-notes
-```
-
-If Qt is installed in a custom prefix (example `/user/local/QT/6.10.1/gcc_64`):
-```bash
-export QT_HOME=/path/to/qt
-export PATH=$QT_HOME/bin:$PATH
-cmake -DCMAKE_PREFIX_PATH=$QT_HOME ..
+./bin/snotes
 ```
 
 ## Binary
