@@ -1,10 +1,11 @@
 import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts
+import CommandManager 1.0
 
 Rectangle {
     id: sidebar
-    
+
     // 继承主题变量
     property color bgColor: "#fafafa"
     property color cardColor: "#ffffff"
@@ -16,21 +17,36 @@ Rectangle {
     property color textSecondary: "#737373"
     property color hoverColor: "#f0f0f0"
     property color selectedColor: "#e8e8e8"
-    
+
     // 当前选中的分组
     property string selectedGroup: "All"
-    
+
     // 数据模型
     property var commandManager: null
 
     // 外部依赖（可选）
     property var commandDialog: null
     property var previewWin: null
-    
+
     // 信号
     signal groupSelected(string groupName)
     signal itemClicked(int index, bool isFolder, string cmd)
 
+    CreateOptionView {
+        id: createOptionView
+        onAddFolderRequested: function(groupName) {
+            if (commandGroupView && typeof commandGroupView.openForAddFolder === 'function') {
+                commandGroupView.openForAddFolder()
+            }
+        }
+        onAddCommandRequested: function(groupName) {
+            if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAddInGroup === 'function') {
+                sidebar.commandDialog.openForAddInGroup(groupName)
+            } else if (sidebar.commandDialog && typeof sidebar.commandDialog.openForAdd === 'function') {
+                sidebar.commandDialog.openForAdd()
+            }
+        }
+    }
 
     ContextMenuView {
         id: contextMenuView
@@ -44,8 +60,8 @@ Rectangle {
             }
         }
         onAddFolderRequested: function() {
-            if (sidebar.groupDialog && typeof sidebar.groupDialog.openForAddFolder === 'function') {
-                sidebar.groupDialog.openForAddFolder()
+            if (commandGroupView && typeof commandGroupView.openForAddFolder === 'function') {
+                commandGroupView.openForAddFolder()
             }
         }
         onViewRequested: function(item) {
@@ -91,7 +107,6 @@ Rectangle {
         }
     }
 
-
     Dialog {
         id: folderRenameDialog
         title: "重命名分组"
@@ -121,33 +136,141 @@ Rectangle {
         }
     }
 
-    Dialog {
+    Popup {
         id: folderDeleteDialog
-        title: "删除分组"
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
+        focus: true
+        padding: 0
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 380
+        height: 220
 
         property string folderName: ""
 
-        contentItem: ColumnLayout {
-            spacing: 8
-            Label {
-                text: "确定删除分组 \"" + folderDeleteDialog.folderName + "\" ？"
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-            Label {
-                text: "该分组下的命令将移动到 All。"
-                color: sidebar.textSecondary
-                font.pixelSize: 12
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 120; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: 0.96; to: 1.0; duration: 140; easing.type: Easing.OutCubic }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 100; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale"; from: 1.0; to: 0.96; duration: 100; easing.type: Easing.InCubic }
         }
 
-        onAccepted: {
-            if (!sidebar.commandManager || typeof sidebar.commandManager.removeFolder !== 'function') return
-            sidebar.commandManager.removeFolder(folderName, false)
+        background: Rectangle {
+            radius: 12
+            color: "#ffffff"
+            border.color: "#E5E7EB"
+            border.width: 1
+        }
+
+        contentItem: ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 16
+
+            // 警告图标 + 标题
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Rectangle {
+                    width: 36; height: 36; radius: 18
+                    color: "#FEF2F2"
+                    Label {
+                        anchors.centerIn: parent
+                        text: "⚠"
+                        font.pixelSize: 18
+                    }
+                }
+                Label {
+                    text: "删除分组"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: "#111827"
+                    Layout.fillWidth: true
+                }
+            }
+
+            // 描述
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                Label {
+                    text: "确定删除分组  \"" + folderDeleteDialog.folderName + "\"  ？"
+                    font.pixelSize: 14
+                    color: "#111827"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: "该分组下的所有命令将被移动到 All 分组。"
+                    font.pixelSize: 12
+                    color: "#6B7280"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+
+            // 操作按钮
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Item { Layout.fillWidth: true }
+                Button {
+                    id: cancelDeleteBtn
+                    text: "取消"
+                    flat: true
+                    implicitHeight: 36
+                    implicitWidth: 88
+                    font.pixelSize: 13
+                    font.bold: true
+                    background: Rectangle {
+                        radius: 8
+                        color: cancelDeleteBtn.pressed ? "#E5E7EB" : (cancelDeleteBtn.hovered ? "#F3F4F6" : "#F8FAFC")
+                        border.color: "#E2E8F0"
+                    }
+                    contentItem: Label {
+                        text: cancelDeleteBtn.text
+                        color: "#111827"
+                        font: cancelDeleteBtn.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: folderDeleteDialog.close()
+                }
+                Button {
+                    id: confirmDeleteBtn
+                    text: "删除"
+                    flat: true
+                    implicitHeight: 36
+                    implicitWidth: 88
+                    font.pixelSize: 13
+                    font.bold: true
+                    background: Rectangle {
+                        radius: 8
+                        color: confirmDeleteBtn.pressed ? "#991B1B" : (confirmDeleteBtn.hovered ? "#B91C1C" : "#DC2626")
+                        border.color: "#DC2626"
+                    }
+                    contentItem: Label {
+                        text: confirmDeleteBtn.text
+                        color: "#FFFFFF"
+                        font: confirmDeleteBtn.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        if (sidebar.commandManager && typeof sidebar.commandManager.removeFolder === 'function') {
+                            sidebar.commandManager.removeFolder(folderDeleteDialog.folderName, false)
+                        }
+                        folderDeleteDialog.close()
+                    }
+                }
+            }
         }
     }
     
@@ -174,39 +297,60 @@ Rectangle {
         anchors.margins: 0
         spacing: 0
         
-        // 侧边栏标题
+        // 顶部操作区：新建按钮 + 搜索栏（对齐为一个整体）
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 56
             color: "transparent"
-            
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 12
-                spacing: 8
-                
-                Label {
-                    text: "📁"
-                    font.pixelSize: 16
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 6
+                ToolButton {
+                    id: addRootBtn
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    contentItem: Label {
+                        text: "+"
+                        font.pixelSize: 18
+                        color: textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 6
+                        color: addRootBtn.pressed ? selectedColor : (addRootBtn.hovered ? hoverColor : "transparent")
+                    }
+                    ToolTip.visible: hovered
+                    ToolTip.text: "新建目录/命令"
+                    ToolTip.delay: 400
+                    onClicked: {
+                        createOptionView.openFor("All")
+                    }
                 }
-                
-                Label {
-                    text: "分组导航"
-                    font.bold: true
+                TextField {
+                    id: searchField
+                    placeholderText: "搜索目录或命令"
                     font.pixelSize: 13
-                    color: textPrimary
                     Layout.fillWidth: true
+                    leftPadding: 8
+                    rightPadding: 8
+                    height: 32
+                    background: Rectangle {
+                        radius: 6
+                        color: "#f4f4f4"
+                        border.color: sidebar.subtleBorder
+                    }
+                    onTextChanged: {
+                        treeList.model = treeList.buildTreeModel(searchField.text)
+                    }
                 }
             }
-            
-            // 底部分隔线
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
                 height: 1
                 color: subtleBorder
             }
@@ -274,14 +418,13 @@ Rectangle {
                 }
             }
             
-            function buildTreeModel() {
+            function buildTreeModel(filterText) {
                 if (!commandManager) {
                     console.log("SidebarTreeView: commandManager is null")
                     return []
                 }
-                
                 var result = []
-                
+                var filter = (filterText || "").toLowerCase()
                 // 添加 "全部" 选项
                 result.push({
                     name: "All",
@@ -293,55 +436,57 @@ Rectangle {
                     childCount: 0,
                     index: -1
                 })
-                
                 // 获取所有分组（文件夹）
                 var groups = commandManager.groups
-                
                 for (var i = 0; i < groups.length; i++) {
                     var groupName = groups[i]
                     if (groupName === "All") continue
-                    
-                    // 获取该分组下的命令数量
                     var commands = commandManager.commandsInFolder(groupName)
-                    console.log("SidebarTreeView: group", groupName, "has", commands.length, "commands")
-                    
-                    result.push({
-                        name: groupName,
-                        displayName: groupName,
-                        icon: "📂",
-                        isFolder: true,
-                        level: 0,
-                        expanded: false,
-                        childCount: commands.length,
-                        index: -1
-                    })
-                    
-                    // 添加子命令（可展开显示）
+                    // 过滤分组和命令
+                    var groupMatch = groupName.toLowerCase().indexOf(filter) !== -1
+                    var filteredCmds = []
                     for (var j = 0; j < commands.length; j++) {
                         var cmd = commands[j]
+                        if (!filter || cmd.title.toLowerCase().indexOf(filter) !== -1 || groupMatch) {
+                            filteredCmds.push(cmd)
+                        }
+                    }
+                    if (groupMatch || filteredCmds.length > 0) {
                         result.push({
-                            name: cmd.title,
-                            displayName: cmd.title,
-                            icon: "📄",
-                            isFolder: false,
-                            level: 1,
+                            name: groupName,
+                            displayName: groupName,
+                            icon: "📂",
+                            isFolder: true,
+                            level: 0,
                             expanded: false,
-                            childCount: 0,
-                            parentGroup: groupName,
-                            index: cmd.sourceIndex,
-                            command: cmd.commandContent,
-                            description: cmd.description || ""
+                            childCount: filteredCmds.length,
+                            index: -1
                         })
+                        for (var k = 0; k < filteredCmds.length; k++) {
+                            var cmd2 = filteredCmds[k]
+                            result.push({
+                                name: cmd2.title,
+                                displayName: cmd2.title,
+                                icon: "📄",
+                                isFolder: false,
+                                level: 1,
+                                expanded: false,
+                                childCount: 0,
+                                parentGroup: groupName,
+                                index: cmd2.sourceIndex,
+                                command: cmd2.commandContent,
+                                description: cmd2.description || ""
+                            })
+                        }
                     }
                 }
-                
                 console.log("SidebarTreeView: buildTreeModel result count =", result.length)
                 return result
             }
             
             delegate: ItemDelegate {
                 id: treeItem
-                width: treeList.width
+                width: ListView.view ? ListView.view.width : 0
                 
                 property bool isSelected: modelData.isFolder && modelData.name === selectedGroup
                 property bool isExpanded: modelData.expanded || false
@@ -352,8 +497,10 @@ Rectangle {
                     if (itemLevel === 0) return true
                     // 查找父级是否展开
                     var parentGroup = modelData.parentGroup
-                    for (var i = 0; i < treeList.model.length; i++) {
-                        var item = treeList.model[i]
+                    var view = ListView.view
+                    if (!view || !view.model) return false
+                    for (var i = 0; i < view.model.length; i++) {
+                        var item = view.model[i]
                         if (item.isFolder && item.name === parentGroup) {
                             return item.expanded
                         }
@@ -387,7 +534,6 @@ Rectangle {
                     anchors.leftMargin: 12 + (itemLevel * 20)
                     anchors.rightMargin: 8
                     spacing: 8
-                    
                     // 展开/收起箭头（仅文件夹且有子项）
                     Label {
                         text: {
@@ -399,31 +545,30 @@ Rectangle {
                         color: textSecondary
                         Layout.preferredWidth: modelData.isFolder && modelData.childCount > 0 ? 12 : 0
                         visible: modelData.isFolder && modelData.childCount > 0
-                        
                         MouseArea {
                             anchors.fill: parent
                             anchors.margins: -4
                             onClicked: {
                                 // 切换展开状态
-                                var newModel = treeList.model.slice()
+                                var view = ListView.view
+                                if (!view || !view.model) return
+                                var newModel = view.model.slice()
                                 for (var i = 0; i < newModel.length; i++) {
                                     if (newModel[i].name === modelData.name && newModel[i].isFolder) {
                                         newModel[i].expanded = !newModel[i].expanded
                                         break
                                     }
                                 }
-                                treeList.model = newModel
+                                view.model = newModel
                             }
                         }
                     }
-                    
                     // 图标
                     Label {
                         text: modelData.icon || "📄"
                         font.pixelSize: 14
                         Layout.preferredWidth: 20
                     }
-                    
                     // 名称
                     Label {
                         text: modelData.displayName || ""
@@ -433,7 +578,6 @@ Rectangle {
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
-                    
                     // 子项数量标签（仅文件夹）
                     Rectangle {
                         visible: modelData.isFolder && modelData.childCount > 0
@@ -441,7 +585,6 @@ Rectangle {
                         Layout.preferredHeight: 18
                         radius: 9
                         color: isSelected ? primary : "#e5e5e5"
-                        
                         Label {
                             id: countLabel
                             anchors.centerIn: parent
@@ -449,6 +592,29 @@ Rectangle {
                             font.pixelSize: 10
                             font.bold: true
                             color: isSelected ? "white" : textSecondary
+                        }
+                    }
+                    // 右侧 + 号按钮（仅文件夹）
+                    ToolButton {
+                        visible: modelData.isFolder
+                        Layout.preferredWidth: 24
+                        Layout.preferredHeight: 24
+                        contentItem: Label {
+                            text: "+"
+                            font.pixelSize: 16
+                            color: textSecondary
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            radius: 6
+                            color: parent.pressed ? selectedColor : (parent.hovered ? hoverColor : "transparent")
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: "新增目录/命令"
+                        ToolTip.delay: 400
+                        onClicked: {
+                            createOptionView.openFor(modelData.name)
                         }
                     }
                 }
@@ -460,14 +626,16 @@ Rectangle {
                         
                         // 如果有子项，同时切换展开状态
                         if (modelData.childCount > 0) {
-                            var newModel = treeList.model.slice()
+                            var view = ListView.view
+                            if (!view || !view.model) return
+                            var newModel = view.model.slice()
                             for (var i = 0; i < newModel.length; i++) {
                                 if (newModel[i].name === modelData.name && newModel[i].isFolder) {
                                     newModel[i].expanded = !newModel[i].expanded
                                     break
                                 }
                             }
-                            treeList.model = newModel
+                            view.model = newModel
                         }
                     } else {
                         // 点击命令项：先选中其父分组并展开，再触发复制
@@ -480,14 +648,16 @@ Rectangle {
                         }
 
                         if (modelData.parentGroup) {
-                            var newModel2 = treeList.model.slice()
+                            var view2 = ListView.view
+                            if (!view2 || !view2.model) return
+                            var newModel2 = view2.model.slice()
                             for (var k = 0; k < newModel2.length; k++) {
                                 if (newModel2[k].isFolder && newModel2[k].name === modelData.parentGroup) {
                                     newModel2[k].expanded = true
                                     break
                                 }
                             }
-                            treeList.model = newModel2
+                            view2.model = newModel2
                         }
 
                         if (commandManager && modelData.command) {
