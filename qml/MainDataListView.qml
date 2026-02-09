@@ -147,8 +147,7 @@ ListView {
             if (!CommandManager) return
             CommandManager.copyToClipboard(commandContent)
             if (copyNotification) {
-                copyNotification.text = "已复制: " + commandContent
-                copyNotification.open()
+                copyNotification.showCopied(title)
             }
         }
 
@@ -213,8 +212,7 @@ ListView {
                         if (CommandManager) {
                             CommandManager.copyToClipboard(commandContent)
                             if (copyNotification) {
-                                copyNotification.text = "已复制: " + title
-                                copyNotification.open()
+                                copyNotification.showCopied(title)
                             }
                         }
                     }

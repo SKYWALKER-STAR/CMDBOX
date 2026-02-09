@@ -388,8 +388,7 @@ Rectangle {
                                 var tab = tabsModel.get(activeTabIndex)
                                 CommandManager.copyToClipboard(tab.editCommand)
                                 if (copyNotification) {
-                                    copyNotification.text = "已复制: " + tab.editTitle
-                                    copyNotification.open()
+                                    copyNotification.showCopied(tab.editTitle)
                                 }
                             }
                         }
@@ -404,7 +403,6 @@ Rectangle {
                     CButton {
                         text: "</>"
                         theme: "success"
-                        flat: true
                         implicitWidth: 40
                         onClicked: {
                             if (previewWin && activeTabIndex >= 0 && activeTabIndex < tabsModel.count) {
@@ -492,8 +490,7 @@ Rectangle {
                             if (CommandManager && activeTabIndex >= 0 && activeTabIndex < tabsModel.count) {
                                 CommandManager.copyToClipboard(tabsModel.get(activeTabIndex).editCommand)
                                 if (copyNotification) {
-                                    copyNotification.text = "已复制"
-                                    copyNotification.open()
+                                    copyNotification.showCopied(tabsModel.get(activeTabIndex).editTitle)
                                 }
                             }
                         }
@@ -715,8 +712,7 @@ Rectangle {
                                             if (CommandManager && activeTabIndex >= 0 && activeTabIndex < tabsModel.count) {
                                                 CommandManager.copyToClipboard(tabsModel.get(activeTabIndex).editCommand)
                                                 if (copyNotification) {
-                                                    copyNotification.text = "已复制"
-                                                    copyNotification.open()
+                                                    copyNotification.showCopied(tabsModel.get(activeTabIndex).editTitle)
                                                 }
                                             }
                                         }
