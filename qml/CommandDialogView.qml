@@ -22,7 +22,7 @@ Window {
     width: 480
     minimumWidth: 400
     minimumHeight: 240
-    height: 420
+    height: 480
     
     //color: "#ffffff"
     

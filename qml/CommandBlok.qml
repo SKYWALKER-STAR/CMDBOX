@@ -166,10 +166,44 @@ Popup {
             Button {
                 text: "复制"
                 onClicked: if (typeof CommandManager !== "undefined") CommandManager.copyToClipboard(cmdArea.text)
+                implicitHeight: 36
+                implicitWidth: 92
+                font.pixelSize: 13
+                font.bold: true
+                background: Rectangle {
+                    radius: 8
+                    color: parent.pressed ? "#E5E7EB" : (parent.hovered ? "#F3F4F6" : "#F8FAFC")
+                    border.color: "#E2E8F0"
+                }
+                contentItem: Label {
+                    text: parent.text
+                    color: "#111827"
+                    font.pixelSize: parent.font.pixelSize
+                    font.bold: parent.font.bold
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
             Button {
                 text: "关闭"
                 onClicked: preview.close()
+                implicitHeight: 36
+                implicitWidth: 92
+                font.pixelSize: 13
+                font.bold: true
+                background: Rectangle {
+                    radius: 8
+                    color: parent.pressed ? "#E5E7EB" : (parent.hovered ? "#F3F4F6" : "#F8FAFC")
+                    border.color: "#E2E8F0"
+                }
+                contentItem: Label {
+                    text: parent.text
+                    color: "#111827"
+                    font.pixelSize: parent.font.pixelSize
+                    font.bold: parent.font.bold
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
         }
     }
