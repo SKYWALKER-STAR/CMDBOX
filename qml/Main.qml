@@ -102,20 +102,15 @@ ApplicationWindow {
             previewWin: previewWin
             
             onGroupSelected: function(groupName) {
-                // 设置选中的分组
-                mainDataListView.selectedGroup = groupName
+                // 切换分组时可清空工作区
             }
             
             onItemClicked: function(index, isFolder, cmd) {
-                if (!isFolder) {
-                    // 命令被点击，显示复制提示
-                    copyNotificationView.text = "已复制: " + cmd
-                    copyNotificationView.open()
+                // 不再在这里处理，改用 commandOpened
+            }
 
-                    if (mainDataListView && typeof mainDataListView.pulseCommand === 'function') {
-                        mainDataListView.pulseCommand(index)
-                    }
-                }
+            onCommandOpened: function(index, title, cmd, description, group) {
+                commandWorkspaceView.openCommand(index, title, cmd, description, group)
             }
             
             // 展开/收起动画
@@ -127,12 +122,19 @@ ApplicationWindow {
                 console.log("SidebarTreeView: commandManager changed:", CommandManager)
             }
         }
-        // 主内容区域
-        MainDataListView {
-            id: mainDataListView
+        // 主内容区域 - Postman 风格工作区
+        CommandWorkspaceView {
+            id: commandWorkspaceView
             commandDialog: commandDialogView
             copyNotification: copyNotificationView
             previewWin: previewWin
+            
+            cardColor: appWindow.cardColor
+            subtleBorder: appWindow.subtleBorder
+            primary: appWindow.primary
+            textPrimary: appWindow.textPrimary
+            textSecondary: appWindow.textSecondary
+            accent: appWindow.accent
         }
     }  // 关闭 RowLayout (contentData)
     CommandDialogView {

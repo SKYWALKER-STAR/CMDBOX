@@ -31,6 +31,7 @@ Rectangle {
     // 信号
     signal groupSelected(string groupName)
     signal itemClicked(int index, bool isFolder, string cmd)
+    signal commandOpened(int index, string title, string cmd, string description, string group)
 
     CreateOptionView {
         id: createOptionView
@@ -758,6 +759,7 @@ Rectangle {
                         if (commandManager && modelData.command) {
                             commandManager.copyToClipboard(modelData.command)
                             itemClicked(modelData.index, false, modelData.command)
+                            commandOpened(modelData.index, modelData.name, modelData.command, modelData.description || "", modelData.parentGroup || "")
                         }
                     }
                 }
